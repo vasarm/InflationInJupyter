@@ -9,9 +9,12 @@ def find_function_roots_numerical(function, settings, method = 1):
 
     x_interval = settings.create_interval_list()
     if method == 1:
-        dx = settings.root_classify
+        dx = settings.root_precision
         roots = find_root_method_one(function, x_interval)
-        return roots[(function(roots) < dx) & (function(roots) > -dx)]
+        if len(roots)>=1:
+            return roots[(function(roots) < dx) & (function(roots) > -dx)]
+        else:
+            return np.array([])
     elif method == 2:
         pass
 
@@ -33,10 +36,14 @@ def find_root_method_one(function, x_interval):
     array_like
         All possible roots in defined interval
     """
-    return x_interval[argrelextrema(np.absolute(function(x_interval)), np.less)]
+    func_x = np.abs(function(x_interval))
+    if not isinstance(func_x, np.ndarray):
+        func_x = np.full(x_interval.shape, func_x)
+
+    return x_interval[argrelextrema(func_x, np.less)]
 
 
-def find_root_numerical(function, x0, fprime=None, fprime2=None):
+def find_root_newton(function, x0, fprime=None, fprime2=None):
     """
     Calcualte more precise minima value.
 
