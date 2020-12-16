@@ -1,0 +1,4 @@
+/modules/__pycache__
+/sphinx/_build
+
+.gitignore*.pyc
