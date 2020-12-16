@@ -7,7 +7,7 @@ import inspect
 
 from scipy.misc import derivative
 
-from .. import errors as errors
+import errors as errors
 
 
 class InflationFunctionBase:
@@ -34,12 +34,14 @@ class InflationFunctionBase:
         """
 
         if isinstance(function, sp.Expr):
-            variables = [(x, sp.Symbol(x, real=True)) for x in function.free_symbols]
+            variables = [(x, sp.Symbol(x, real=True))
+                         for x in function.free_symbols]
             function = function.subs(variables)
         elif isinstance(function, str):
             try:
                 function = sp.sympify(function)
-                variables = [(x, sp.Symbol(x, real=True)) for x in function.free_symbols]
+                variables = [(x, sp.Symbol(x, real=True))
+                             for x in function.free_symbols]
                 function = function.subs(variables)
             except:
                 raise RuntimeError("Can't convert string to sympy expression.")
@@ -47,7 +49,6 @@ class InflationFunctionBase:
             function = None
 
         self.__symbolic_function = function
-
 
     @property
     def numeric_function(self):
@@ -66,7 +67,8 @@ class InflationFunctionBase:
         elif isinstance(function, types.FunctionType) or isinstance(function, sc.interpolate.interpolate.interp1d):
             pass
         else:
-            raise errors.WrongTypeError("Function must be string/sympy expression/scipy interp1d or FunctionType.")
+            raise errors.WrongTypeError(
+                "Function must be string/sympy expression/scipy interp1d or FunctionType.")
 
         self.__numeric_function = function
 
@@ -103,13 +105,15 @@ class InflationFunctionBase:
         if self.symbolic_function is not None:
             return sp.diff(self.symbolic_function, self.symbol)
         else:
-            raise errors.FunctionNotDefinedError("Symbolic function for '{}' is not defined.".format(self.name))
+            raise errors.FunctionNotDefinedError(
+                "Symbolic function for '{}' is not defined.".format(self.name))
 
     def symbolic_second_derivative(self):
         if self.symbolic_function is not None:
             return sp.diff(self.symbolic_function, self.symbol, 2)
         else:
-            raise errors.FunctionNotDefinedError("Symbolic function for '{}' is not defined.".format(self.name))
+            raise errors.FunctionNotDefinedError(
+                "Symbolic function for '{}' is not defined.".format(self.name))
 
     def numeric_derivative(self, x, dx, **kwargs):
         """
@@ -138,11 +142,12 @@ class InflationFunctionBase:
             return function(x, **kwargs)
         else:
             try:
-                function = lambda y: self.numeric_function(x=y, **kwargs)
+                def function(y): return self.numeric_function(x=y, **kwargs)
             except ZeroDivisionError:
                 ZeroDivisionError("Division by zero occured.")
             except:
-                raise errors.ParameterDefinitionError("Inserted number of parameters and function parameters is not same.")
+                raise errors.ParameterDefinitionError(
+                    "Inserted number of parameters and function parameters is not same.")
             return derivative(func=function, x0=x, n=1, dx=dx)
 
     def numeric_second_derivative(self, x, dx, **kwargs):
@@ -172,14 +177,154 @@ class InflationFunctionBase:
             return function(x, **kwargs)
         else:
             try:
-                function = lambda y: self.numeric_function(x=y, **kwargs)
+                def function(y): return self.numeric_function(x=y, **kwargs)
             except ZeroDivisionError:
                 ZeroDivisionError("Division by zero occured.")
             except:
-                raise errors.ParameterDefinitionError("Inserted number of parameters and function parameters is not same.")
+                raise errors.ParameterDefinitionError(
+                    "Inserted number of parameters and function parameters is not same.")
             return derivative(func=function, x0=x, n=2, dx=dx)
 
+    def _variables(self):
+        return tuple(inspect.getfullargspec(self.numeric_function).args)
 
 
-def _variables(self):
-    return tuple(inspect.getfullargspec(self.numeric_function).args)
+class InflationFunction(InflationFunctionBase):
+    """
+    More simple class which takes all properties of InflationFunctionBase.
+    This function has defined name and settings. Settings are used in calculation.
+    Also it has shortened names for easier use later.
+    """
+
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, **kwargs)
+        self.name = name
+        self.settings = settings
+
+    @property
+    def name(self):
+        return __name
+
+    @name.setter
+    def name(self, name):
+        """
+        Define function name.
+
+        Parameters
+        ----------
+        name : str
+            Function new name. Can't be empty ('')
+        """
+        if isinstance(name, str):
+            if name == "":
+                raise errors.WrongValueError(
+                    "Name can't be empty (name != '').")
+            self.__name = name
+        else:
+            errors.WrongTypeError("Function name must be string.")
+
+    @property
+    def settings(self):
+        return self.__settings
+
+    @settings.setter
+    def settings(self, settings):
+        if isinstance(settings, config.Settings):
+            self.__settings = settings
+        else:
+            raise errors.WrongTypeError("Settings must be Settings type.")
+
+    def f_s(self):
+        """
+        Returns symbolic function
+        """
+        return self.symbolic_function()
+
+    def n_s(self, x):
+        """
+        Returns numeric function values
+        """
+        return self.numeric_function(x)
+
+    def d_s(self):
+        """
+        Return symbolic function derivative.
+        """
+        return self.symbolic_derivative()
+
+    def dd_s(self):
+        """
+        Return symbolic function second derivative.
+        """
+        return self.symbolic_second_derivative()
+
+    def d_n(self, x, **kwargs):
+        """
+        Return function first derivative values at point x.
+        """
+        return self.numeric_derivative(x, dx=self.settings.dx, **kwargs)
+
+    def dd_n(self, x, **kwargs):
+        """
+        Return function second derivative values at point x.
+        """
+        return self.numeric_second_derivative(x, dx=self.settings.dx, **kwargs)
+
+
+# Define different function classes
+# Used for checking later right types.
+
+class FunctionA(InflationFunction):
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "A"
+
+
+class FunctionB(InflationFunction):
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "B"
+
+
+class FunctionV(InflationFunction):
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "V"
+
+
+class FunctionIV(InflationFunction):
+    """
+    Function for invariant potential which has varaiable invariant scalar field. I_V (I_φ).
+    """
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "IV"
+
+
+class FunctionIVf(InflationFunction):
+    """
+    Function for invariant potential which has varaiable scalar field. I_V (φ).
+    """
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "IVf"
+
+
+class FunctionIF(InflationFunction):
+    """
+    Function for invariant scalar field which has varaiable invariant potential. I_φ (I_V).
+    """
+
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "IF"
+
+
+class FunctionIFf(InflationFunction):
+    """
+    Function for invariant scalar field which has variable scalar field. I_φ (φ).
+    """
+
+    def __init__(self, function, name, settings, **kwargs):
+        super().__init__(function, name, settings, **kwargs)
+        self.name = "IFf"
