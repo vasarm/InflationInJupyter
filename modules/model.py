@@ -13,9 +13,10 @@ import sys
 from . import symbolicfunctions as symbolic_solver
 from . import numericfunctions as numeric_solver
 
-from .plotter import end_value_selection, N_integrand_selection, ask_end_value, ask_N_integrand
+from . import plotter as plotter
 from .function import FunctionA, FunctionB, FunctionV, FunctionIV
 from . import errors as errors
+
 
 def _create_parameter_key(parameter_combination):
     """
@@ -36,8 +37,10 @@ def _create_parameter_key(parameter_combination):
         temp_list.append(str(key) + "=" + str(value))
     return ", ".join(temp_list)
 
+
 def _convert_dictionary_symbols_to_strings(dictionary):
     return dict((str(key), dictionary[key]) for key in dictionary)
+
 
 def _ipython_info():
     """
@@ -54,6 +57,7 @@ def _ipython_info():
     elif 'IPython' in sys.modules:
         ip = 'terminal'
     return ip
+
 
 def _convert_dictionary_strings_to_symbols(dictionary):
     """
@@ -98,27 +102,26 @@ class BaseModel:
         # 0 = Mode not defined
         # 1 = Function mode
         # 2 = Invariant mode
-        self._mode = None
+        self.mode = None
 
         #
-        self._symbol = sp.symbol("x", real=True)
+        self._symbol = sp.Symbol("x", real=True)
 
         #
         self.parameter_values = self._define_parameter_values()
         self.parameter_combinations = self._combine_parameter_values()
 
     @property
-    def _mode(self):
-        return _mode
-
-    @_mode.setter
-    def _mode(self, mode):
+    def mode(self):
+        return self.__mode
+    @mode.setter
+    def mode(self, mode):
         if all([x is not None] for x in [self.A, self.B, self.V]):
-            self._mode = 1
+            self.__mode = 1
         elif self.IV is not None:
-            self._mode = 2
+            self.__mode = 2
         else:
-            self._mode = 0
+            self.__mode = 0
             print("For calculations define (A,B,V) functions or IV function.")
 
     @property
@@ -129,11 +132,12 @@ class BaseModel:
     def A(self, A):
         if isinstance(A, FunctionA):
             self.__A = A
+        elif isinstance(A, str):
+            self.__A = FunctionA(A, self.settings)
         elif A is None:
             self.__A = None
         else:
             raise errors.WrongTypeError("Function A must be FunctionA type.")
-
     @property
     def B(self):
         return self.__B
@@ -142,6 +146,8 @@ class BaseModel:
     def B(self, B):
         if isinstance(B, FunctionB):
             self.__B = B
+        elif isinstance(B, str):
+            self.__B = FunctionB(B, self.settings)
         elif B is None:
             self.__B = None
         else:
@@ -155,6 +161,8 @@ class BaseModel:
     def V(self, V):
         if isinstance(V, FunctionV):
             self.__V = V
+        elif isinstance(V, str):
+            self.__V = FunctionV(V, self.settings)
         elif V is None:
             self.__V = None
         else:
@@ -165,9 +173,11 @@ class BaseModel:
         return self.__IV
 
     @IV.setter
-    def FunctionIV(self, IV):
+    def IV(self, IV):
         if isinstance(IV, FunctionIV):
             self.__IV = IV
+        elif isinstance(IV, str):
+            self.__IV = FunctionIV(IV, self.settings)
         elif IV is None:
             self.__IV = None
         else:
@@ -187,8 +197,8 @@ class BaseModel:
         errors.ModeError
             If self.mode == 0 in other words mode is not defined because combination of (A,B,V) or IV is not defined.
         """
-        if self._mode == 1:
-            return all(x.symbolic_function_defined() for x in {self.A, self.B, self.V})
+        if self.mode == 1:
+            return all(x.symbolic_function_defined() for x in [self.A, self.B, self.V])
         elif self.mode == 2:
             return self.IV.symbolic_function_defined()
         else:
@@ -279,7 +289,7 @@ class BaseModel:
                 try:
                     print("Enter parameter '{}' values. For decimals use dot ('.'). \n Separate numbers with commas or space.".format(
                         parameter))
-                    user_input = input("|||   ")
+                    user_input = input("Enter '{}' value(s) here --->: ".format(parameter))
                     # Find all possible parameter values.
                     user_input = np.unique(
                         [np.float(x) for x in decimal_regex.findall(user_input)])
@@ -618,7 +628,9 @@ class CalculationModel(BaseModel):
             epsilon (ε) values in position x
         """
         if self._all_functions_symbolic():
-            return sp.lambdify(self.symbols, self.epsilon_s, "numpy")(x, **kwargs)
+            symbols = (self._symbol, ) + \
+                self._return_parameter_symbolic_symbols()
+            return sp.lambdify(symbols, self.epsilon_s, "numpy")(x, **kwargs)
         else:
             # Functions A, B and V are defined
             if self.mode == 1:
@@ -627,13 +639,15 @@ class CalculationModel(BaseModel):
             elif self.mode == 2:
                 return 1 / 2 * (self.IV.d_n(x, **kwargs)/self.IV.f_n(x, **kwargs)) ** 2
 
+
 class InflationModel(CalculationModel):
     """
     Main class, which end-user uses. This class has functions which define calculation order and calculated.
     """
+
     def __init__(self, settings, A=None, B=None, V=None, IV=None, **kwargs):
         super().__init__(settings, A=A, B=B, V=V, IV=IV, **kwargs)
-        
+
         # Dictionaries which keys are defined by parameters and their values. Uses function _create_parameter_key
         self.end_values = {}
         self.N_functions = {}
@@ -665,37 +679,42 @@ class InflationModel(CalculationModel):
         """
         # First define used key
         key = _create_parameter_key(parameter_combination)
-        
+
         with np.errstate(divide="ignore", invalid="ignore"):
             if info:
-                print("***** Calcualting scalar field end value *****")
-                print("***** {} *****").format(key)
+                print("***** Calculating scalar field end value *****")
+                print("***** {} *****".format(key))
                 start_time = time.perf_counter()
             if method == "symbolic":
                 try:
                     print("***** Calculating symbolically *****")
-                    value = self._find_field_end_value_symbolic(parameter_combination, info,subprocess_info)
+                    value = self._find_field_end_value_symbolic(
+                        parameter_combination, info, subprocess_info)
                 except (errors.TimeoutError, errors.NoSolutionError) as e:
                     print(e)
-                    print("Couldn't solve symbolically. Trying to calculate numerically.")
-                    value = self._find_field_end_value_numeric(parameter_combination, info, subprocess_info)
+                    print(
+                        "Couldn't solve symbolically. Trying to calculate numerically.")
+                    value = self._find_field_end_value_numeric(
+                        parameter_combination, info, subprocess_info)
             elif method == "numeric":
                 print("***** Calcultaing numerically *****")
-                value = self._find_field_end_value_numeric(parameter_combination, info, subprocess_info)
+                value = self._find_field_end_value_numeric(
+                    parameter_combination, info, subprocess_info)
             else:
-                raise errors.WrongValueError("method must be 'symbolic' or 'numeric'.")
+                raise errors.WrongValueError(
+                    "method must be 'symbolic' or 'numeric'.")
 
             if info:
                 end_time = time.perf_counter()
                 print("***** Inflation ends at φ = {:.6f} *****".format(value))
                 print("Time taken: {:.2f} s.".format(end_time - start_time))
                 print("***** Scalar field end value found *****")
-            
+
             self.end_values[key] = value
-            
+
             if return_value:
                 return value
-    
+
     def _find_field_end_value_symbolic(self, parameter_combination, info, subprocess_info):
         """
         Process runs function to calculate scalar field end value symbolically.
@@ -714,29 +733,32 @@ class InflationModel(CalculationModel):
         -------
         float
             Scalar field end value
-            
+
         Raises
         ------
         errors.NoSolutionError
             Symbolically couldn't find any solution for scalar field end value.
         """
-        parameter_combination = _convert_dictionary_strings_to_symbols(parameter_combination)
-        
+        parameter_combination = _convert_dictionary_strings_to_symbols(
+            parameter_combination)
+
         # Substitute parameter values in epsilon function
         epsilon = self.epsilon_s().subs(parameter_combination)
 
         # Usually should be turned off as it slows down and no effect.
         if self.settings.simplify:
             print("Simplifying:")
-            epsilon = sp.simplify(epsilon, inverse=self.settings.inverse, rational=self.settings.rational)
-        
+            epsilon = sp.simplify(
+                epsilon, inverse=self.settings.inverse, rational=self.settings.rational)
+
         if subprocess_info:
             print("End value function: {}=0".format(sp.latex(epsilon - 1)))
-        
+
         if info:
             print("***** Starting to find zeroes *****")
             start_time = time.perf_counter()
-        end_value_list = symbolic_solver.run_end_value_calculation_symbolical(epsilon, time=self.settings.timeout)
+        end_value_list = symbolic_solver.run_end_value_calculation_symbolical(
+            epsilon, time=self.settings.timeout)
 
         if info:
             end_time = time.perf_counter()
@@ -747,21 +769,24 @@ class InflationModel(CalculationModel):
                                    self.settings.interval[0] <= x <= self.settings.interval[1]])
 
         if len(end_value_list) == 0:
-            raise errors.NoSolutionError("No end value found. Changing interval might help.")
+            raise errors.NoSolutionError(
+                "No end value found. Changing interval might help.")
         elif len(end_value_list) == 1:
             end_value = end_value_list[0]
         else:
             # Create used function list
-            plotter_functions = {"V": lambda x: self.V.f_n(x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
+            plotter_functions = {"V": lambda x: self.V.f_n(
+                x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
 
-            figure = plotter.end_value_selection(plotter_functions, parameter_combination, end_value_list, self.settings.create_interval_list())
+            figure = plotter.end_value_selection(
+                plotter_functions, parameter_combination, end_value_list, self.settings.create_interval_list())
             figure.show()
             end_value = plotter.ask_end_value()
             if _ipython_info():
                 plt.close()
 
         return np.float(end_value)
-    
+
     def _find_field_end_value_numeric(self, parameter_combination, info, subprocess_info=False):
         """
         Process runs function to calculate scalar field end value numerically.
@@ -780,18 +805,20 @@ class InflationModel(CalculationModel):
         -------
         float
             Scalar field end value
-            
+
         Raises
         ------
         errors.NoSolutionError
             Numerically couldn't find any solution for scalar field end value.
         """
-        if self.all_functions_symbolic():
-            parameter_combination = _convert_dictionary_strings_to_symbols(parameter_combination)
+        if self._all_functions_symbolic():
+            parameter_combination = _convert_dictionary_strings_to_symbols(
+                parameter_combination)
             epsilon = self.epsilon_s().subs(parameter_combination)
             if self.settings.simplify:
                 print("***** Simplifying *****")
-                epsilon = sp.simplify(epsilon, inverse=self.settings.inverse, rational=self.settings.rational)
+                epsilon = sp.simplify(
+                    epsilon, inverse=self.settings.inverse, rational=self.settings.rational)
                 print("***** Simplified *****")
 
             func_derivative = sp.diff(epsilon - 1, self._symbol)
@@ -800,31 +827,40 @@ class InflationModel(CalculationModel):
             fprime = sp.lambdify(self._symbol, func_derivative, "numpy")
             fprime2 = sp.lambdify(self._symbol, func_derivative2, "numpy")
         else:
-            epsilon_minus_one = lambda x: self.epsilon_n(x, **parameter_combination) - 1
-            fprime = lambda x: derivative(func=epsilon_minus_one, x0=x, dx=self.settings.dx)
-            fprime2 = lambda x: derivative(func=epsilon_minus_one, x0=x, dx=self.settings.dx, n=2)
+            def epsilon_minus_one(x): return self.epsilon_n(
+                x, **parameter_combination) - 1
+
+            def fprime(x): return derivative(
+                func=epsilon_minus_one, x0=x, dx=self.settings.dx)
+            def fprime2(x): return derivative(
+                func=epsilon_minus_one, x0=x, dx=self.settings.dx, n=2)
 
         # Lets find approximate zeros
-        root_values_list = numeric_solver.find_function_zeros_numerical(epsilon_minus_one, self.settings)
+        root_values_list = numeric_solver.find_function_roots_numerical(
+            epsilon_minus_one, self.settings)
 
         if len(root_values_list) == 0:
-            raise errors.NoSolutionError("No end value found. Changing interval might help.")
+            raise errors.NoSolutionError(
+                "No end value found. Changing interval might help.")
         elif len(root_values_list) == 1:
             selected_root_value = root_values_list[0]
         else:
             # Create used function list
-            plotter_functions = {"V": lambda x: self.V.f_n(x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
+            plotter_functions = {"V": lambda x: self.V.f_n(
+                x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
 
-            figure = plotter.plot_end_values(plotter_functions, parameter_combination, root_values_list, self.settings.create_interval_list())
+            figure = plotter.plot_end_values(
+                plotter_functions, parameter_combination, root_values_list, self.settings.create_interval_list())
             figure.show()
             selected_root_value = plotter.ask_end_value()
             if _ipython_info():
                 plt.close()
 
-        end_value = numeric_solver.calculate_scalar_field_end_value(epsilon_minus_one, selected_root_value, fprime, fprime2)
+        end_value = numeric_solver.find_root_newton(
+            epsilon_minus_one, selected_root_value, fprime, fprime2)
 
         return end_value
-    
+
     def _find_N_function(self, parameter_combination, method="numeric", return_value=False, info=True, subprocess_info=False):
         """
         Define process to calculate N(φ) and fint it's inverse function. N is a value which describes inflation scale in the end of inflation.
@@ -858,25 +894,30 @@ class InflationModel(CalculationModel):
             if key in self.end_values:
                 if info:
                     print("***** Integrating N-function *****")
-                    print("***** {} *****").format(key)
+                    print("***** {} *****".format(key))
                     start_time = time.perf_counter()
                 if method == "symbolic" and self._all_functions_symbolic():
                     try:
-                        value = self._integrate_N_function_symbolic(parameter_combination, key, info=True, subprocess_info=False)
+                        value = self._integrate_N_function_symbolic(
+                            parameter_combination, key, info=True, subprocess_info=False)
                         N_symbol = sp.Symbol("N", real=True, positive=True)
                         value = sp.lambdify(N_symbol, value, "numpy")
                     except (TimeoutError, errors.NoSolutionError) as e:
                         print(e)
                         print("Couldn't solve symbolically. Calculating numerically.")
-                        value = self._integrate_N_function_numeric(parameter_combination, key, info=True, subprocess_info=False)
+                        value = self._integrate_N_function_numeric(
+                            parameter_combination, key, info=True, subprocess_info=False)
                 elif method == "numeric":
-                    value = self._integrate_N_function_numeric(parameter_combination, key, info=True, subprocess_info=False)
+                    value = self._integrate_N_function_numeric(
+                        parameter_combination, key, info=True, subprocess_info=False)
                 else:
-                    raise errors.WrongValueError("method must be 'symbolic' or 'numeric'.")
+                    raise errors.WrongValueError(
+                        "method must be 'symbolic' or 'numeric'.")
 
                 if info:
                     end_time = time.perf_counter()
-                    print("Time taken: {:.2f} s.".format(end_time - start_time))
+                    print("Time taken: {:.2f} s.".format(
+                        end_time - start_time))
                     print("***** Found φ(N) function *****")
 
                 self.N_functions[key] = value
@@ -884,7 +925,8 @@ class InflationModel(CalculationModel):
                 if return_value:
                     return value
             else:
-                raise errors.ValueNotDefinedError("Scalar field end value has not been calculated for this parameter combination.")
+                raise errors.ValueNotDefinedError(
+                    "Scalar field end value has not been calculated for this parameter combination.")
 
     def _integrate_N_function_symbolic(self, parameter_combination, key, info, subprocess_info):
         """
@@ -911,39 +953,43 @@ class InflationModel(CalculationModel):
         errors.NoSolutionError
             Symbolically couldn't find any solution for scalar field end value.
         """
-        parameter_combination = _convert_dictionary_strings_to_symbols(parameter_combination)
+        parameter_combination = _convert_dictionary_strings_to_symbols(
+            parameter_combination)
         N_function = self.N_integrand_s().subs(parameter_combination)
 
         if self.settings.simplify:
             print("Simplifying:")
-            N_function = sp.simplify(N_function, inverse=self.settings.inverse, rational=self.settings.rational)
+            N_function = sp.simplify(
+                N_function, inverse=self.settings.inverse, rational=self.settings.rational)
 
         if subprocess_info:
             print("dN(φ) = {}".format(N_function))
-
 
         if info:
             print("**** Integrating function and calculating it's inverse function *****")
             start_time = time.perf_counter()
         N_function_list = symbolic_solver.run_N_fold_integration_symbolic(N_function,
-                                                            self.end_value_dict[key],
-                                                            self.symbol,
-                                                            time=self.settings.timeout)
+                                                                          self.end_values[key],
+                                                                          self._symbol,
+                                                                          time=self.settings.timeout)
 
         if info:
             end_time = time.perf_counter()
             print("Time taken: {:.2f} s.".format(end_time - start_time))
             print("***** Function integrated and inverse function found *****")
 
-        N_function_list = [sp.sympify(x, {"N": sp.Symbol("N", real=True, positive=True)}) for x in N_function_list]
+        N_function_list = [sp.sympify(
+            x, {"N": sp.Symbol("N", real=True, positive=True)}) for x in N_function_list]
 
         if len(N_function_list) == 0:
             raise errors.NoSolutionError("Couldn't calculate in time.")
         elif len(N_function_list) == 1:
             N_function = N_function_list[0]
         else:
-            N_function_list_numeric = [sp.lambdify(sp.Symbol("N", real=True, positive=True), func, "numpy") for func in N_function_list]
-            figure = plotter.plot_N_functions(N_function_list_numeric, self.settings.N_list)
+            N_function_list_numeric = [sp.lambdify(sp.Symbol(
+                "N", real=True, positive=True), func, "numpy") for func in N_function_list]
+            figure = plotter.plot_N_functions(
+                N_function_list_numeric, self.settings.N_list)
             figure.show()
             N_function = plotter.ask_N_function(N_function_list_numeric)
             if _ipython_info():
@@ -974,17 +1020,21 @@ class InflationModel(CalculationModel):
             φ(N) function. This function returns scalar field start value for given N.
         """
         if self._all_functions_symbolic():
-            parameter_combination = _convert_dictionary_strings_to_symbols(parameter_combination)
+            parameter_combination = _convert_dictionary_strings_to_symbols(
+                parameter_combination)
             symbolic_function = self.N_integrand_s().subs(parameter_combination)
             if self.settings.simplify:
                 print("Simplifying:")
-                symbolic_function = sp.simplify(symbolic_function, inverse=self.settings.inverse, rational=self.settings.rational)
+                symbolic_function = sp.simplify(
+                    symbolic_function, inverse=self.settings.inverse, rational=self.settings.rational)
 
-            function = sp.lambdify(self.symbol, 1 / symbolic_function, "numpy")
+            function = sp.lambdify(self._symbol, 1 / symbolic_function, "numpy")
         else:
-            function = lambda x: 1 / self.N_integrand_n(x, **parameter_combination)
+            def function(x): return 1 / \
+                self.N_integrand_n(x, **parameter_combination)
 
-        N_function = numeric_solver.integrate_N_fold_numerical(function, self.end_value_dict[key], self.settings.N_list)
+        N_function = numeric_solver.integrate_N_fold_numerical(
+            function, self.end_values[key], self.settings.N_list)
 
         return N_function
 
@@ -1001,12 +1051,13 @@ class InflationModel(CalculationModel):
         subprocess_info : bool, optional
             Does it print function expressions, by default False
         """
-        for combination in self.shuffle_parameter_values():
-            print("***** Starting program *****")
-            start_time = time.perf_counter()
-            for combination in self.parameter_combinations:
-                self._find_field_end_value(parameters_combination=combination, method=method, info=info, subprocess_info=subprocess_info)
-                self._find_N_function(parameters_combination=combination, method=method, info=info, subprocess_info=subprocess_info)
-            end_time = time.end_counter()
-            print("Time taken: {:.2f} s.".format(end_time - start_time))
-            print("***** End calculating *****")
+        print("***** Starting program *****")
+        start_time = time.perf_counter()
+        for combination in self.parameter_combinations:
+            self._find_field_end_value(
+                parameter_combination=combination, method=method, info=info, subprocess_info=subprocess_info)
+            self._find_N_function(parameter_combination=combination,
+                                    method=method, info=info, subprocess_info=subprocess_info)
+        end_time = time.perf_counter()
+        print("Time taken: {:.2f} s.".format(end_time - start_time))
+        print("***** End calculating *****")
