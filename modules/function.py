@@ -7,7 +7,8 @@ import inspect
 
 from scipy.misc import derivative
 
-import errors as errors
+from . import errors as errors
+from . import config as config
 
 
 class InflationFunctionBase:
@@ -135,8 +136,10 @@ class InflationFunctionBase:
             Function derivative in point x.
         """
         if self.symbolic_function is not None:
+            # Take symbolic derivative.
+            # Then convert all function symbol strings to sp.Symbol() and convert sympy function to FunctionType.
             symbolic_derivative = self.symbolic_derivative()
-            variables = self._variables()
+            variables = self._parameter_symbols()
             variables = [sp.Symbol(x, real=True) for x in variables]
             function = sp.lambdify(variables, symbolic_derivative, "numpy")
             return function(x, **kwargs)
@@ -170,8 +173,10 @@ class InflationFunctionBase:
             Function second derivative in point x.
         """
         if self.symbolic_function is not None:
+            # Take symbolic second derivative.
+            # Then convert all function symbol strings to sp.Symbol() and convert sympy function to FunctionType.
             symbolic_derivative = self.symbolic_second_derivative()
-            variables = self._variables()
+            variables = self._parameter_symbols()
             variables = [sp.Symbol(x, real=True) for x in variables]
             function = sp.lambdify(variables, symbolic_derivative, "numpy")
             return function(x, **kwargs)
@@ -185,8 +190,19 @@ class InflationFunctionBase:
                     "Inserted number of parameters and function parameters is not same.")
             return derivative(func=function, x0=x, n=2, dx=dx)
 
-    def _variables(self):
-        return tuple(inspect.getfullargspec(self.numeric_function).args)
+    def symbolic_function_defined(self):
+        return isinstance(self.symbolic_function, sp.Expr)
+
+    def _parameter_symbols(self):
+        """
+        Function to return all function free parameters.
+
+        Returns
+        -------
+        tuple
+            Function all free parameters' symbol strings.
+        """
+        return tuple(inspect.getfullargspec(self.numeric_function).args[1:])
 
 
 class InflationFunction(InflationFunctionBase):
@@ -240,11 +256,14 @@ class InflationFunction(InflationFunctionBase):
         """
         return self.symbolic_function()
 
-    def n_s(self, x):
+    def f_n(self, x, **kwargs):
         """
         Returns numeric function values
         """
-        return self.numeric_function(x)
+        # Take only parameters which are used.
+        parameters_dict = {x: **kwargs[x] for x in self._parameter_symbols()}
+
+        return self.numeric_function(x, **parameters_dict)
 
     def d_s(self):
         """
@@ -262,13 +281,17 @@ class InflationFunction(InflationFunctionBase):
         """
         Return function first derivative values at point x.
         """
-        return self.numeric_derivative(x, dx=self.settings.dx, **kwargs)
+        parameters_dict = {x: **kwargs[x] for x in self._parameter_symbols()}
+
+        return self.numeric_derivative(x, dx=self.settings.dx, **parameters_dict)
 
     def dd_n(self, x, **kwargs):
         """
         Return function second derivative values at point x.
         """
-        return self.numeric_second_derivative(x, dx=self.settings.dx, **kwargs)
+        parameters_dict = {x: **kwargs[x] for x in self._parameter_symbols()}
+
+        return self.numeric_second_derivative(x, dx=self.settings.dx, **parameters_dict)
 
 
 # Define different function classes
@@ -296,6 +319,7 @@ class FunctionIV(InflationFunction):
     """
     Function for invariant potential which has varaiable invariant scalar field. I_V (I_φ).
     """
+
     def __init__(self, function, name, settings, **kwargs):
         super().__init__(function, name, settings, **kwargs)
         self.name = "IV"
@@ -305,6 +329,7 @@ class FunctionIVf(InflationFunction):
     """
     Function for invariant potential which has varaiable scalar field. I_V (φ).
     """
+
     def __init__(self, function, name, settings, **kwargs):
         super().__init__(function, name, settings, **kwargs)
         self.name = "IVf"
