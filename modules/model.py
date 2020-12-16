@@ -10,8 +10,8 @@ import itertools
 import time
 import sys
 
-from .symbolicfunctions import *
-from .numericfunctions import *
+from . import symbolicfunctions as symbolic_solver
+from . import numericfunctions as numeric_solver
 
 from .plotter import end_value_selection, N_integrand_selection, ask_end_value, ask_N_integrand
 from .function import FunctionA, FunctionB, FunctionV, FunctionIV
@@ -736,7 +736,7 @@ class InflationModel(CalculationModel):
         if info:
             print("***** Starting to find zeroes *****")
             start_time = time.perf_counter()
-        end_value_list = solver.run_end_value_calculation_symbolical(epsilon, self.symbol, time=self.settings.timeout)
+        end_value_list = symbolic_solver.run_end_value_calculation_symbolical(epsilon, time=self.settings.timeout)
 
         if info:
             end_time = time.perf_counter()
@@ -805,7 +805,7 @@ class InflationModel(CalculationModel):
             fprime2 = lambda x: derivative(func=epsilon_minus_one, x0=x, dx=self.settings.dx, n=2)
 
         # Lets find approximate zeros
-        root_values_list = solver.find_function_zeros_num(epsilon_minus_one, self.settings)
+        root_values_list = numeric_solver.find_function_zeros_numerical(epsilon_minus_one, self.settings)
 
         if len(root_values_list) == 0:
             raise errors.NoSolutionError("No end value found. Changing interval might help.")
@@ -821,7 +821,7 @@ class InflationModel(CalculationModel):
             if _ipython_info():
                 plt.close()
 
-        end_value = solver.calculate_scalar_field_end_value(epsilon_minus_one, selected_root_value, fprime, fprime2)
+        end_value = numeric_solver.calculate_scalar_field_end_value(epsilon_minus_one, selected_root_value, fprime, fprime2)
 
         return end_value
     
@@ -925,7 +925,7 @@ class InflationModel(CalculationModel):
         if info:
             print("**** Integrating function and calculating it's inverse function *****")
             start_time = time.perf_counter()
-        N_function_list = solver.run_N_fold_integration_sym(N_function,
+        N_function_list = symbolic_solver.run_N_fold_integration_symbolic(N_function,
                                                             self.end_value_dict[key],
                                                             self.symbol,
                                                             time=self.settings.timeout)
@@ -946,7 +946,7 @@ class InflationModel(CalculationModel):
             figure = plotter.plot_N_functions(N_function_list_numeric, self.settings.N_list)
             figure.show()
             N_function = plotter.ask_N_function(N_function_list_numeric)
-            if ipython_info():
+            if _ipython_info():
                 plt.close()
         if subprocess_info:
             print("φ(N) = {}".format(N_function))
@@ -984,7 +984,7 @@ class InflationModel(CalculationModel):
         else:
             function = lambda x: 1 / self.N_integrand_n(x, **parameter_combination)
 
-        N_function = solver.integrate_N_fold_num(function, self.end_value_dict[key], self.settings.N_list)
+        N_function = numeric_solver.integrate_N_fold_numerical(function, self.end_value_dict[key], self.settings.N_list)
 
         return N_function
 
