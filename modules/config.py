@@ -3,11 +3,21 @@ import numpy as np
 
 class Settings:
     """
-    Class for different program settings. At the start these settings are loaded from according file.
+    Class for different program settings. At the start these settings are loaded from predefined file.
     """
 
     def __init__(self):
+        """
+        This function has different properties:
 
+        Attributes
+        ----------
+        self.derivative_dx : float
+            Increment size for derivative calculation.
+
+        self.formalism : str
+            Possible two values. Palatini or Metric, by default None.
+        """
         self.formalism = "Metric"
 
         self.scalar_field_range = [0, 10]
@@ -22,17 +32,9 @@ class Settings:
 
         #
         self.root_precision = 1e-4
-        
+
         self.simplify = False
 
-        """
-        This function has different properties:
-        derivative_dx : float
-            Increment size for derivative calculation.
-
-        formalism : str
-            Possible two values. Palatini or Metric, by default None.
-        """
 
     def create_interval_list(self):
         return np.arange(self.scalar_field_range[0], self.scalar_field_range[1]+self.scalar_field_step, self.scalar_field_step)

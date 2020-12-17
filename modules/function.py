@@ -7,8 +7,8 @@ import inspect
 
 from scipy.misc import derivative
 
-from . import errors as errors
-from . import config as config
+import modules.errors as errors
+import modules.config as config
 
 
 class InflationFunctionBase:

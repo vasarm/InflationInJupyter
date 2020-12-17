@@ -92,18 +92,3 @@ def integrate_N_fold_numerical(function, end_value, N_list):
 
         N_function = interp1d(N_list, y_scalar_field_values)
         return N_function
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,2 +1,2 @@
-from .model import InflationModel
-from .config import Settings
+from modules.config import Settings
+from modules.model import InflationModel
