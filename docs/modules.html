@@ -1,0 +1,940 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>modules package &mdash; Inflation In Jupyter 16.12.2020 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Inflation In Jupyter’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Inflation In Jupyter
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">modules package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.config">modules.config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.errors">modules.errors module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.function">modules.function module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.model">modules.model module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.numericfunctions">modules.numericfunctions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.plotter">modules.plotter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules.symbolicfunctions">modules.symbolicfunctions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-modules">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Inflation In Jupyter</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>modules package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="modules-package">
+<h1>modules package<a class="headerlink" href="#modules-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-modules.config">
+<span id="modules-config-module"></span><h2>modules.config module<a class="headerlink" href="#module-modules.config" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modules.config.Settings">
+<em class="property">class </em><code class="sig-prename descclassname">modules.config.</code><code class="sig-name descname">Settings</code><a class="headerlink" href="#modules.config.Settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for different program settings. At the start these settings are loaded from predefined file.</p>
+<dl class="py method">
+<dt id="modules.config.Settings.create_interval_list">
+<code class="sig-name descname">create_interval_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.config.Settings.create_interval_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules.errors">
+<span id="modules-errors-module"></span><h2>modules.errors module<a class="headerlink" href="#module-modules.errors" title="Permalink to this headline">¶</a></h2>
+<dl class="py exception">
+<dt id="modules.errors.AllFunctionsNotSymbolic">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">AllFunctionsNotSymbolic</code><a class="headerlink" href="#modules.errors.AllFunctionsNotSymbolic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>Program tries to calculate symbolically but all required functions aren’t symbolically defined.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.FormalismError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">FormalismError</code><a class="headerlink" href="#modules.errors.FormalismError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>Formalism definition is wrong. Must be “Metric” or “Palatini”.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.FunctionNotDefinedError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">FunctionNotDefinedError</code><a class="headerlink" href="#modules.errors.FunctionNotDefinedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
+<p>In case of if InflationFunction is not defined.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.ModeError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">ModeError</code><a class="headerlink" href="#modules.errors.ModeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>[summary]</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.NoSolutionError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">NoSolutionError</code><a class="headerlink" href="#modules.errors.NoSolutionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>If module has problem getting answer.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.ParameterDefinitionError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">ParameterDefinitionError</code><a class="headerlink" href="#modules.errors.ParameterDefinitionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>[summary]</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.TimeoutError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">TimeoutError</code><a class="headerlink" href="#modules.errors.TimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.errors.TimeoutError" title="modules.errors.TimeoutError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeoutError</span></code></a></p>
+<p>If symbolic calculation takes too long time.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.WrongTypeError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">WrongTypeError</code><a class="headerlink" href="#modules.errors.WrongTypeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></p>
+<p>Isnerted value is wrong type</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="modules.errors.WrongValueError">
+<em class="property">exception </em><code class="sig-prename descclassname">modules.errors.</code><code class="sig-name descname">WrongValueError</code><a class="headerlink" href="#modules.errors.WrongValueError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>[summary]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules.function">
+<span id="modules-function-module"></span><h2>modules.function module<a class="headerlink" href="#module-modules.function" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modules.function.FunctionA">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionA</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'A'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionB">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionB</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'B'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionIF">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionIF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'IF'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionIF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+<p>Function for invariant scalar field which has varaiable invariant potential. I_φ (I_V).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionIFf">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionIFf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'IFf'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionIFf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+<p>Function for invariant scalar field which has variable scalar field. I_φ (φ).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionIV">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionIV</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'IV'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionIV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+<p>Function for invariant potential which has varaiable invariant scalar field. I_V (I_φ).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionIVf">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionIVf</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'IVf'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionIVf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+<p>Function for invariant potential which has varaiable scalar field. I_V (φ).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.FunctionV">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">FunctionV</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'V'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.FunctionV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunction" title="modules.function.InflationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunction</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.InflationFunction">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">InflationFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.function.InflationFunctionBase" title="modules.function.InflationFunctionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.function.InflationFunctionBase</span></code></a></p>
+<p>More simple class which takes all properties of InflationFunctionBase.
+This function has defined name and settings. Settings are used in calculation.
+Also it has shortened names for easier use later.</p>
+<dl class="py method">
+<dt id="modules.function.InflationFunction.d_n">
+<code class="sig-name descname">d_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.d_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return function first derivative values at point x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.d_s">
+<code class="sig-name descname">d_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.d_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return symbolic function derivative.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.dd_n">
+<code class="sig-name descname">dd_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.dd_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return function second derivative values at point x.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.dd_s">
+<code class="sig-name descname">dd_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.dd_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return symbolic function second derivative.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.f_n">
+<code class="sig-name descname">f_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.f_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns numeric function values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.f_s">
+<code class="sig-name descname">f_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunction.f_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns symbolic function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#modules.function.InflationFunction.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunction.settings">
+<em class="property">property </em><code class="sig-name descname">settings</code><a class="headerlink" href="#modules.function.InflationFunction.settings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.function.InflationFunctionBase">
+<em class="property">class </em><code class="sig-prename descclassname">modules.function.</code><code class="sig-name descname">InflationFunctionBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.numeric_derivative">
+<code class="sig-name descname">numeric_derivative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dx</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase.numeric_derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate numerically function’s derivative. If this function has defined symbolic function
+then it uses this for mor accuracy. Else calculate numerically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array_like</em>) – Value where derivative is calculated.</p></li>
+<li><p><strong>dx</strong> (<em>float</em>) – Increment for derivative calculation.</p></li>
+<li><p><strong>**kwargs</strong> (<em>float</em>) – Function parameter values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>derivative_value</strong> – Function derivative in point x.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.numeric_function">
+<em class="property">property </em><code class="sig-name descname">numeric_function</code><a class="headerlink" href="#modules.function.InflationFunctionBase.numeric_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.numeric_second_derivative">
+<code class="sig-name descname">numeric_second_derivative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">dx</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase.numeric_second_derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate numerically function’s second derivatve. If this function has defined symbolic function
+then it uses this for mor accuracy. Else calculate numerically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array_like</em>) – Value where derivative is calculated.</p></li>
+<li><p><strong>dx</strong> (<em>float</em>) – Increment for derivative calculation.</p></li>
+<li><p><strong>**kwargs</strong> (<em>float</em>) – Function parameter values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>derivative_value</strong> – Function second derivative in point x.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.symbolic_derivative">
+<code class="sig-name descname">symbolic_derivative</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase.symbolic_derivative" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.symbolic_function">
+<em class="property">property </em><code class="sig-name descname">symbolic_function</code><a class="headerlink" href="#modules.function.InflationFunctionBase.symbolic_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.symbolic_function_defined">
+<code class="sig-name descname">symbolic_function_defined</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase.symbolic_function_defined" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.function.InflationFunctionBase.symbolic_second_derivative">
+<code class="sig-name descname">symbolic_second_derivative</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.function.InflationFunctionBase.symbolic_second_derivative" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules.model">
+<span id="modules-model-module"></span><h2>modules.model module<a class="headerlink" href="#module-modules.model" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modules.model.BaseModel">
+<em class="property">class </em><code class="sig-prename descclassname">modules.model.</code><code class="sig-name descname">BaseModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">A</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">B</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">V</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">IV</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="modules.model.BaseModel.A">
+<em class="property">property </em><code class="sig-name descname">A</code><a class="headerlink" href="#modules.model.BaseModel.A" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.BaseModel.B">
+<em class="property">property </em><code class="sig-name descname">B</code><a class="headerlink" href="#modules.model.BaseModel.B" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.BaseModel.IV">
+<em class="property">property </em><code class="sig-name descname">IV</code><a class="headerlink" href="#modules.model.BaseModel.IV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.BaseModel.V">
+<em class="property">property </em><code class="sig-name descname">V</code><a class="headerlink" href="#modules.model.BaseModel.V" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.BaseModel.mode">
+<em class="property">property </em><code class="sig-name descname">mode</code><a class="headerlink" href="#modules.model.BaseModel.mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.BaseModel.return_formalism">
+<code class="sig-name descname">return_formalism</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.BaseModel.return_formalism" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.model.CalculationModel">
+<em class="property">class </em><code class="sig-prename descclassname">modules.model.</code><code class="sig-name descname">CalculationModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">A</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">B</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">V</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">IV</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.model.BaseModel" title="modules.model.BaseModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.model.BaseModel</span></code></a></p>
+<p>In this class all possible calculations with inflation functions are defined.
+Used to calculate F, scalar-tensor pertubation ratio r, scalar spectral index ns, epsilon ε which defines inflation end point.</p>
+<dl class="py method">
+<dt id="modules.model.CalculationModel.F_n">
+<code class="sig-name descname">F_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.F_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate function F values which is combination of A, B and V.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>F function values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.FormalismError" title="modules.errors.FormalismError"><strong>errors.FormalismError</strong></a> – If formalism in settings is wrong. Must be “Metric” or “Palatini”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.F_s">
+<code class="sig-name descname">F_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.F_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate function F which is combination of A, B and V.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>F function expression</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#modules.errors.FormalismError" title="modules.errors.FormalismError"><strong>errors.FormalismError</strong></a> – If formalism in settings is wrong. Must be “Metric” or “Palatini”.</p></li>
+<li><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.N_integrand_n">
+<code class="sig-name descname">N_integrand_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.N_integrand_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate N_integrand values. If possible use symbolic functions to define function and then calculate values.
+This is used to numerically integrate scalar field values to find N values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>N_integrand values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.N_integrand_s">
+<code class="sig-name descname">N_integrand_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.N_integrand_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calulate N_integrand expression. This is defined to integrate and find function N(φ).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>N_integrand expression.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.dF_n">
+<code class="sig-name descname">dF_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.dF_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate function F derivative values. If possible use symbolic functions to define function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>F function derivative values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.dF_s">
+<code class="sig-name descname">dF_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.dF_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate function F derivative.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>F function derivative expression</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.epsilon_n">
+<code class="sig-name descname">epsilon_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.epsilon_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate epsilon (ε) values. If possible use symbolic functions to define function and then calculate values.
+This is used to find scalar field value where inflation ends. This means that ε(φ) = 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>epsilon (ε) values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.epsilon_s">
+<code class="sig-name descname">epsilon_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.epsilon_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calulate epsilon (ε) expression.
+This is used to find scalar field value where inflation ends. This means that ε(φ) = 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>epsilon (ε) expression.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.ns_n">
+<code class="sig-name descname">ns_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.ns_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate scalar spectral index values. If possible use symbolic functions to define function and then calculate values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>scalar spectral index n_s  values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.ns_s">
+<code class="sig-name descname">ns_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.ns_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calulate observable scalar spectral index pertubation ratio expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>scalar spectral index expression.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.r_n">
+<code class="sig-name descname">r_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.r_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate tensor-to-scalar pertubation ratio values. If possible use symbolic functions to define function and then calculate values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>F function derivative values in position x</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modules.model.CalculationModel.r_s">
+<code class="sig-name descname">r_s</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.CalculationModel.r_s" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calulate observable tesnor-to-scalar pertubation ratio value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tensor-to-scalar pertubation ratio expression.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sp.Expr</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.errors.AllFunctionsNotSymbolic" title="modules.errors.AllFunctionsNotSymbolic"><strong>errors.AllFunctionsNotSymbolic</strong></a> – If program tries to calculate symbolically but not all functions are symbolic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="modules.model.InflationModel">
+<em class="property">class </em><code class="sig-prename descclassname">modules.model.</code><code class="sig-name descname">InflationModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">A</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">B</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">V</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">IV</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.InflationModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modules.model.CalculationModel" title="modules.model.CalculationModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">modules.model.CalculationModel</span></code></a></p>
+<p>Main class, which end-user uses. This class has functions which define calculation order and calculated.</p>
+<dl class="py method">
+<dt id="modules.model.InflationModel.calculate">
+<code class="sig-name descname">calculate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'numeric'</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">subprocess_info</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.model.InflationModel.calculate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs all required functions to calculate parameter values which can be compared with observable values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – Is method “numeric” or “symbolic”, by default “numeric”</p></li>
+<li><p><strong>info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Does it print calculation info, by default True</p></li>
+<li><p><strong>subprocess_info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Does it print function expressions, by default False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules.numericfunctions">
+<span id="modules-numericfunctions-module"></span><h2>modules.numericfunctions module<a class="headerlink" href="#module-modules.numericfunctions" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="modules.numericfunctions.find_function_roots_numerical">
+<code class="sig-prename descclassname">modules.numericfunctions.</code><code class="sig-name descname">find_function_roots_numerical</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">settings</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.numericfunctions.find_function_roots_numerical" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="modules.numericfunctions.find_root_method_one">
+<code class="sig-prename descclassname">modules.numericfunctions.</code><code class="sig-name descname">find_root_method_one</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">x_interval</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.numericfunctions.find_root_method_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calcualte given function roots. This method actually calculates
+function values, takes absolute value from every value and then
+looks for minimas (lowest extremas).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>FunctionType</em>) – Function which roots are looked for</p></li>
+<li><p><strong>x_interval</strong> (<em>array_like</em>) – x all possible values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>All possible roots in defined interval</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.numericfunctions.find_root_newton">
+<code class="sig-prename descclassname">modules.numericfunctions.</code><code class="sig-name descname">find_root_newton</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">x0</span></em>, <em class="sig-param"><span class="n">fprime</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fprime2</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.numericfunctions.find_root_newton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calcualte more precise minima value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>FunctionType</em>) – Function whcih root is calculated</p></li>
+<li><p><strong>x0</strong> (<em>float</em>) – Near that point root is defined</p></li>
+<li><p><strong>fprime</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – [description], by default None</p></li>
+<li><p><strong>fprime2</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – [description], by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>funtction root</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.numericfunctions.integrate_N_fold_numerical">
+<code class="sig-prename descclassname">modules.numericfunctions.</code><code class="sig-name descname">integrate_N_fold_numerical</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">end_value</span></em>, <em class="sig-param"><span class="n">N_list</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.numericfunctions.integrate_N_fold_numerical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve differential equation for dφ/dN for given N values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>FunctionType</em>) – Differential expression dφ/dN</p></li>
+<li><p><strong>end_value</strong> (<em>float</em>) – One point to solve differential equation</p></li>
+<li><p><strong>N_list</strong> (<em>list</em>) – Possible N values list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Function φ(N)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.interp1d</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules.plotter">
+<span id="modules-plotter-module"></span><h2>modules.plotter module<a class="headerlink" href="#module-modules.plotter" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="modules.plotter.N_integrand_selection">
+<code class="sig-prename descclassname">modules.plotter.</code><code class="sig-name descname">N_integrand_selection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.plotter.N_integrand_selection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="modules.plotter.end_value_selection">
+<code class="sig-prename descclassname">modules.plotter.</code><code class="sig-name descname">end_value_selection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.plotter.end_value_selection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-modules.symbolicfunctions">
+<span id="modules-symbolicfunctions-module"></span><h2>modules.symbolicfunctions module<a class="headerlink" href="#module-modules.symbolicfunctions" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="modules.symbolicfunctions.calculate_scalar_field_end_value">
+<code class="sig-prename descclassname">modules.symbolicfunctions.</code><code class="sig-name descname">calculate_scalar_field_end_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">epsilon</span></em>, <em class="sig-param"><span class="n">queue</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.symbolicfunctions.calculate_scalar_field_end_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates scalar field value symbolically at the end of the inflation.
+Basically this function looks for function roots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epsilon</strong> (<em>str</em>) – Epsilon function</p></li>
+<li><p><strong>queue</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – Through Queue the value is returned after process, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[description]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[type]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.symbolicfunctions.integrate_N_integrand">
+<code class="sig-prename descclassname">modules.symbolicfunctions.</code><code class="sig-name descname">integrate_N_integrand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N_integrand</span></em>, <em class="sig-param"><span class="n">end_value</span></em>, <em class="sig-param"><span class="n">symbol</span></em>, <em class="sig-param"><span class="n">queue</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.symbolicfunctions.integrate_N_integrand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrate to find N(φ) function and then find it’s inverse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N_integrand</strong> (<em>string</em>) – Function to be integrated</p></li>
+<li><p><strong>end_value</strong> (<em>float</em>) – scalar field end value</p></li>
+<li><p><strong>queue</strong> (<em>Queue</em><em>, </em><em>optional</em>) – Through Queue the value is returned after process, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[description]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>[type]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.symbolicfunctions.run_N_fold_integration_symbolic">
+<code class="sig-prename descclassname">modules.symbolicfunctions.</code><code class="sig-name descname">run_N_fold_integration_symbolic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N_integrand</span></em>, <em class="sig-param"><span class="n">end_value</span></em>, <em class="sig-param"><span class="n">time</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.symbolicfunctions.run_N_fold_integration_symbolic" title="Permalink to this definition">¶</a></dt>
+<dd><p>[summary]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N_integrand</strong> (<em>sp.Expr</em>) – Function to be integrated</p></li>
+<li><p><strong>end_value</strong> (<em>float</em>) – Scalar field value in the end of inflation</p></li>
+<li><p><strong>time</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – Timeout time, by default None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of possible solutions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.symbolicfunctions.run_end_value_calculation_symbolical">
+<code class="sig-prename descclassname">modules.symbolicfunctions.</code><code class="sig-name descname">run_end_value_calculation_symbolical</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">epsilon</span></em>, <em class="sig-param"><span class="n">time</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.symbolicfunctions.run_end_value_calculation_symbolical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run end value calculation through subprocess.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epsilon</strong> (<em>sp.Expr</em>) – Epsilon function</p></li>
+<li><p><strong>time</strong> (<em>int</em>) – Timeout time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of possible solutions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="modules.symbolicfunctions.subprocess">
+<code class="sig-prename descclassname">modules.symbolicfunctions.</code><code class="sig-name descname">subprocess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">time</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.symbolicfunctions.subprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function which calls out defined functions and terminates them after time.
+Becaues of that it creates another thread (using module multiprocessing).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>FunctionType</em>) – Defined function to call out</p></li>
+<li><p><strong>time</strong> (<em>int</em><em>, </em><em>optional</em>) – Time in seconds after what thread is terminated, by default 10</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Any (string, float, sp.Expr, )</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#modules.errors.TimeoutError" title="modules.errors.TimeoutError"><strong>TimeoutError</strong></a> – After define time if program is terminated.</p></li>
+<li><p><strong>Errors.NoSolutionError</strong> – Couldn’t calculate solution for function</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-modules">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-modules" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Inflation In Jupyter’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Martin Vasar
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

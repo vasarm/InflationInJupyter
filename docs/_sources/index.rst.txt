@@ -1,16 +1,17 @@
 .. Inflation In Jupyter documentation master file, created by
-   sphinx-quickstart on Wed Dec 16 22:06:31 2020.
+   sphinx-quickstart on Thu Dec 17 12:18:11 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Inflation In Jupyter's
+Welcome to Inflation In Jupyter's documentation!
 ================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
-   code
+
+   modules
+
 
 Indices and tables
 ==================
