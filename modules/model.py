@@ -10,12 +10,13 @@ import itertools
 import time
 import sys
 
-from . import symbolicfunctions as symbolic_solver
-from . import numericfunctions as numeric_solver
+import modules.symbolicfunctions as symbolic_solver
+import modules.numericfunctions as numeric_solver
 
-from . import plotter as plotter
-from .function import FunctionA, FunctionB, FunctionV, FunctionIV
-from . import errors as errors
+from modules.config import Settings
+import modules.plotter as plotter
+from modules.function import FunctionA, FunctionB, FunctionV, FunctionIV
+import modules.errors as errors
 
 
 def _create_parameter_key(parameter_combination):
@@ -103,27 +104,29 @@ class BaseModel:
         # 1 = Function mode
         # 2 = Invariant mode
         self.mode = None
-
         #
         self._symbol = sp.Symbol("x", real=True)
 
         #
-        self.parameter_values = self._define_parameter_values()
-        self.parameter_combinations = self._combine_parameter_values()
+        # "Write condition that A, B and V or IV are defined"
+        if all(x is not None for x in [self.A, self.B, self.V]) or self.IV is not None:
+            self.parameter_values = self._define_parameter_values()
+            self.parameter_combinations = self._combine_parameter_values()
 
     @property
     def mode(self):
         return self.__mode
     @mode.setter
     def mode(self, mode):
-        if all([x is not None] for x in [self.A, self.B, self.V]):
+        if all([x is not None for x in [self.A, self.B, self.V]]):
             self.__mode = 1
         elif self.IV is not None:
             self.__mode = 2
+        elif isinstance(mode, int) and mode in [0,1,2]:
+            self.__mode = mode
         else:
             self.__mode = 0
-            print("For calculations define (A,B,V) functions or IV function.")
-
+            #print("For calculations define (A,B,V) functions or IV function.")
     @property
     def A(self):
         return self.__A
@@ -225,7 +228,7 @@ class BaseModel:
             symbols.sort()
 
         elif self.mode == 2:
-            symbols = self.IV._parameters()
+            symbols = self.IV._parameter_symbols()
         else:
             raise errors.ModeError("Can't get function free parameters\n" +
                                    "because combination of (A,B,V) functions or IV function is not defined.")
@@ -246,13 +249,12 @@ class BaseModel:
             If self.mode == 0 in other words mode is not defined because combination of (A,B,V) or IV is not defined.
         """
         if self.mode == 1:
-            symbols = list(set(self.A.f_s(
-            ).free_symbols + self.B.f_s().free_symbols + self.IV.f_s().free_symbols - self._symbol))
+            symbols = list(self.A.f_s().free_symbols | self.B.f_s().free_symbols | self.V.f_s().free_symbols - set([self._symbol]))
             symbols.sort(key=str)
 
         elif self.mode == 2:
             symbols = sorted(
-                list(self.IV.f_s().free_symbols - self._symbol), key=str)
+                list(self.IV.f_s().free_symbols - set([self._symbol])), key=str)
         else:
             raise errors.ModeError("Can't get function free parameters\n" +
                                    "because combination of (A,B,V) functions or IV function is not defined.")
@@ -579,7 +581,7 @@ class CalculationModel(BaseModel):
         if self._all_functions_symbolic():
             symbols = (self._symbol, ) + \
                 self._return_parameter_symbolic_symbols()
-            numeric_N = sp.lambdify(symbols, self.N_integrand_s, "numpy")
+            numeric_N = sp.lambdify(symbols, self.N_integrand_s(), "numpy")
             return numeric_N(x, **kwargs)
         else:
             # Functions A, B and V are defined
@@ -630,7 +632,7 @@ class CalculationModel(BaseModel):
         if self._all_functions_symbolic():
             symbols = (self._symbol, ) + \
                 self._return_parameter_symbolic_symbols()
-            return sp.lambdify(symbols, self.epsilon_s, "numpy")(x, **kwargs)
+            return sp.lambdify(symbols, self.epsilon_s(), "numpy")(x, **kwargs)
         else:
             # Functions A, B and V are defined
             if self.mode == 1:
@@ -645,12 +647,82 @@ class InflationModel(CalculationModel):
     Main class, which end-user uses. This class has functions which define calculation order and calculated.
     """
 
-    def __init__(self, settings, A=None, B=None, V=None, IV=None, **kwargs):
+    def __init__(self, settings=None, A=None, B=None, V=None, IV=None, name=None, **kwargs):
+        if settings is None:
+            settings = Settings()
+        
         super().__init__(settings, A=A, B=B, V=V, IV=IV, **kwargs)
 
         # Dictionaries which keys are defined by parameters and their values. Uses function _create_parameter_key
         self.end_values = {}
         self.N_functions = {}
+        self.name = name
+
+
+    def _ask_function(self, function_name):
+        """
+        Function which asks user to define function expression.
+
+        Parameters
+        ----------
+        function_name : string
+            Function name
+        """
+        print("Enter function {}.".format(function_name))
+        while True:
+            user_input = input("Write here --> ")
+            if function_name == "A":
+                try:
+                    self.A = FunctionA(user_input, self.settings)
+                except:
+                    print("Incorrect input. Try again.")
+            elif function_name == "B":
+                try:
+                    self.B = FunctionB(user_input, self.settings)
+                except:
+                    print("Incorrect input. Try again.")
+            elif function_name == "V":
+                try:
+                    self.V = FunctionV(user_input, self.settings)
+                except:
+                    print("Incorrect input. Try again.")
+            if function_name == "IV":
+                try:
+                    self.IV = FunctionIV(user_input, self.settings)
+                except:
+                    print("Incorrect input. Try again.")
+
+    def initialize(self):
+        """
+        Program to initialize model. Asks user to insert required functions. This asks user to enter
+        what functions to use for calculation: 1) A, B and V or 2) only IV
+        """
+        print("Choose what functions to use:\n1) A, B, V\n2) I_V")
+        while True:
+            user_input = input("Enter mode number --> ")
+            if user_input in ["1","2"]:
+                mode = int(user_input)
+                break
+            else:
+                print("Enter correct value.")
+
+        if mode == 1:
+            print("olen siin")
+            self._ask_function("A")
+            self._ask_function("B")
+            self._ask_function("V")
+            print("Entered functions are:")
+            print("A:", self.A.f_s())
+            print("B:", self.B.f_s())
+            print("V:", self.V.f_s())
+        elif mode == 2:
+            self._ask_function("IV")
+            print("Entered function is:")
+            print("IV:", self.IV)
+        self.mode = int(mode)
+
+        self.parameter_values = self._define_parameter_values()
+        self.parameter_combinations = self._combine_parameter_values()
 
     def _find_field_end_value(self, parameter_combination, method="numeric", return_value=False, info=True, subprocess_info=False):
         """
@@ -687,7 +759,8 @@ class InflationModel(CalculationModel):
                 start_time = time.perf_counter()
             if method == "symbolic":
                 try:
-                    print("***** Calculating symbolically *****")
+                    if info:
+                        print("***** Calculating symbolically *****")
                     value = self._find_field_end_value_symbolic(
                         parameter_combination, info, subprocess_info)
                 except (errors.TimeoutError, errors.NoSolutionError) as e:
@@ -697,7 +770,8 @@ class InflationModel(CalculationModel):
                     value = self._find_field_end_value_numeric(
                         parameter_combination, info, subprocess_info)
             elif method == "numeric":
-                print("***** Calcultaing numerically *****")
+                if info:
+                    print("***** Calculating numerically *****")
                 value = self._find_field_end_value_numeric(
                     parameter_combination, info, subprocess_info)
             else:
@@ -739,11 +813,11 @@ class InflationModel(CalculationModel):
         errors.NoSolutionError
             Symbolically couldn't find any solution for scalar field end value.
         """
-        parameter_combination = _convert_dictionary_strings_to_symbols(
+        parameter_combination_sym = _convert_dictionary_strings_to_symbols(
             parameter_combination)
 
         # Substitute parameter values in epsilon function
-        epsilon = self.epsilon_s().subs(parameter_combination)
+        epsilon = self.epsilon_s().subs(parameter_combination_sym)
 
         # Usually should be turned off as it slows down and no effect.
         if self.settings.simplify:
@@ -775,15 +849,14 @@ class InflationModel(CalculationModel):
             end_value = end_value_list[0]
         else:
             # Create used function list
-            plotter_functions = {"V": lambda x: self.V.f_n(
-                x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
+            plotter_functions = {"V": self.V.f_n, "e": self.epsilon_n}
 
-            figure = plotter.end_value_selection(
-                plotter_functions, parameter_combination, end_value_list, self.settings.create_interval_list())
+            figure = plotter.plot_scalar_field_end_values(
+                plotter_functions, parameter_combination, end_value_list, self.settings.scalar_field_domain_plot)
             figure.show()
-            end_value = plotter.ask_end_value()
-            if _ipython_info():
-                plt.close()
+            end_value = plotter.ask_scalar_field_end_value()
+            if not _ipython_info():
+                figure.show()
 
         return np.float(end_value)
 
@@ -812,9 +885,9 @@ class InflationModel(CalculationModel):
             Numerically couldn't find any solution for scalar field end value.
         """
         if self._all_functions_symbolic():
-            parameter_combination = _convert_dictionary_strings_to_symbols(
+            parameter_combination_sym = _convert_dictionary_strings_to_symbols(
                 parameter_combination)
-            epsilon = self.epsilon_s().subs(parameter_combination)
+            epsilon = self.epsilon_s().subs(parameter_combination_sym)
             if self.settings.simplify:
                 print("***** Simplifying *****")
                 epsilon = sp.simplify(
@@ -836,23 +909,24 @@ class InflationModel(CalculationModel):
                 func=epsilon_minus_one, x0=x, dx=self.settings.dx, n=2)
 
         # Lets find approximate zeros
-        root_values_list = numeric_solver.find_function_roots_numerical(
+        end_value_list = numeric_solver.find_function_roots_numerical(
             epsilon_minus_one, self.settings)
 
-        if len(root_values_list) == 0:
+        if len(end_value_list) == 0:
             raise errors.NoSolutionError(
                 "No end value found. Changing interval might help.")
-        elif len(root_values_list) == 1:
-            selected_root_value = root_values_list[0]
+        elif len(end_value_list) == 1:
+            selected_root_value = end_value_list[0]
         else:
             # Create used function list
-            plotter_functions = {"V": lambda x: self.V.f_n(
-                x, **parameter_combination), "epsilon": sp.lambify(self._symbol, epsilon, "numpy")}
-
-            figure = plotter.plot_end_values(
-                plotter_functions, parameter_combination, root_values_list, self.settings.create_interval_list())
-            figure.show()
-            selected_root_value = plotter.ask_end_value()
+            plotter_functions = {"V": self.V.f_n, "e": self.epsilon_n}
+            figure = plotter.plot_scalar_field_end_values(
+                plotter_functions, parameter_combination, end_value_list, self.settings.scalar_field_domain_plot)
+            if not _ipython_info():
+                figure.show()
+            else:
+                plt.show()
+            selected_root_value = plotter.ask_scalar_field_end_value(end_value_list)
             if _ipython_info():
                 plt.close()
 
@@ -912,7 +986,7 @@ class InflationModel(CalculationModel):
                         parameter_combination, key, info=True, subprocess_info=False)
                 else:
                     raise errors.WrongValueError(
-                        "method must be 'symbolic' or 'numeric'.")
+                        "Method must be 'symbolic' or 'numeric'.")
 
                 if info:
                     end_time = time.perf_counter()
@@ -986,18 +1060,17 @@ class InflationModel(CalculationModel):
         elif len(N_function_list) == 1:
             N_function = N_function_list[0]
         else:
-            N_function_list_numeric = [sp.lambdify(sp.Symbol(
-                "N", real=True, positive=True), func, "numpy") for func in N_function_list]
-            figure = plotter.plot_N_functions(
-                N_function_list_numeric, self.settings.N_list)
-            figure.show()
-            N_function = plotter.ask_N_function(N_function_list_numeric)
+            figure = plotter.plot_N_function_graphs(N_function_list, self.settings.N_list)
             if _ipython_info():
-                plt.close()
+                figure.show()
+            N_function = plotter.ask_right_N_function(N_function_list)
+            N_function_numpy = sp.lambdify(sp.Symbol("N", real=True, positive=True), N_function, "numpy")
+            if not _ipython_info():
+                figure.show()
         if subprocess_info:
             print("φ(N) = {}".format(N_function))
 
-        return N_function
+        return N_function_numpy
 
     def _integrate_N_function_numeric(self, parameter_combination, key, info, subprocess_info=False):
         """
@@ -1059,5 +1132,33 @@ class InflationModel(CalculationModel):
             self._find_N_function(parameter_combination=combination,
                                     method=method, info=info, subprocess_info=subprocess_info)
         end_time = time.perf_counter()
-        print("Time taken: {:.2f} s.".format(end_time - start_time))
         print("***** End calculating *****")
+        print("Process executed in : {:.2f} s.".format(end_time - start_time))
+
+    def plot_graph(self, plot_type=1, plot_id=None, info=True):
+        """
+        Calls out plotter function for graph plotting.
+
+        Parameters
+        ----------
+        plot_type : int, optional
+            Defines which plot user wants, by default 1
+        plot_id : int, optional
+            User can define plt.figure number. Used for plotting different models in the same graph, by default None
+        info : bool
+            Boolean to show all points in ns-r graph (graph_type=1), by default True
+        """
+        if self.V is None:
+            V_func = self.IV.f_n
+        else:
+            V_func = self.V.f_n
+        
+        functions = {"V": V_func, "e": self.epsilon_n, "N": self.N_functions,
+                     "r": self.r_n, "ns": self.ns_n
+                    }
+        plotter.plot(plot_type=plot_type, functions_dict=functions, parameter_combinations=self.parameter_combinations,
+                     N_points=self.settings.N_values, N_domain=self.settings.N_list, scalar_field_domain = self.settings.scalar_field_domain_plot,
+                     scalar_field_end_values = self.end_values, plot_id=plot_id, model_name=self.name, info=info)
+
+    def plot_show(self):
+        plt.show()
