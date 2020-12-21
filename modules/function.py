@@ -229,7 +229,6 @@ class InflationFunction(InflationFunctionBase):
         Returns numeric function values
         """
         # Take only parameters which are used.
-        print(kwargs)
         parameters_dict = {x: kwargs[x] for x in self._parameter_symbols() if x in kwargs}
         return self.numeric_function(x, **parameters_dict)
 
