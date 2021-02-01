@@ -566,7 +566,7 @@ class CalculationModel(BaseModel):
             )
         # Function IV is defined
         elif self._all_functions_symbolic() and self.mode == 2:
-            return 1 - 6 * self.epsilon_s() + 2 / self.IV.f_s() * self.IV.dd_s()
+            return 1 - 6 * self.epsilon_s() + 2* self.IV.dd_s() / self.IV.f_s()
         else:
             raise errors.AllFunctionsNotSymbolic(
                 "All functions are not symbolically defined.")
@@ -607,8 +607,7 @@ class CalculationModel(BaseModel):
                        )
             # Function IV is defined
             elif self.mode == 2:
-                return 1 - 6 * self.epsilon_n(x, **kwargs) + 2 / (
-                        self.IV.f_n(x=x, **kwargs) * self.IV.dd_n(x, **kwargs) + self.settings.divisor_inc)
+                return 1 - 6 * self.epsilon_n(x, **kwargs) + 2 * self.IV.dd_n(x, **kwargs) * (self.IV.f_n(x=x, **kwargs) + self.settings.divisor_inc)
 
     def N_integrand_s(self):
         """

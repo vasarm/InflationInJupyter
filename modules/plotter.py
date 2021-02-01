@@ -338,7 +338,6 @@ def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_
     Key = N_value and it's value is x and y coordinates in n_s and r graph.
     """
     N_points = {}
-
     # Default settings for N value markers
     color = "k"  # "k" means black
     markers = {1: "o" + color, 2: "P" + color, 3: "s" + color,
@@ -377,6 +376,7 @@ def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_
             label_name = "{}: {}".format("Param", key)
 
         domain = N_function(N_domain)
+
         n_s = functions["ns"](N_domain, **param_combination)
         r = functions["r"](N_domain, **param_combination)
         plt.plot(n_s, r, label=label_name, alpha=0.6)
@@ -384,7 +384,7 @@ def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_
         for N in N_values:
             if info:
                 if model_name:
-                    print("#{} | {} : N={}, n_s={}, r={}, φ={}".format(model_name, key, str(N),
+                    print("#{} | {} : N={}, n_s={}, r={}, φ_0={}".format(model_name, key, str(N),
                                                                        functions["ns"](N_function(N),
                                                                                        **param_combination),
                                                                        functions["r"](N_function(N),
