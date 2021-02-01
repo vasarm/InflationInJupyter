@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sp
+from scipy import stats
 
 import matplotlib.pyplot as plt
 
@@ -11,6 +12,7 @@ def _create_parameter_key(parameter_combination):
     for key, value in sorted(parameter_combination.items(), key=lambda x: str(x[0])):
         temp_list.append(str(key) + "=" + str(value))
     return ", ".join(temp_list)
+
 
 def plot_scalar_field_end_values(functions, parameter_combination, end_values, scalar_field_range):
     """
@@ -35,6 +37,7 @@ def plot_scalar_field_end_values(functions, parameter_combination, end_values, s
     figure
         Returns figure of created plot.
     """
+
     def plot_range(x_points, x_min, x_max):
         """Calculate reasonable plot ranges.
 
@@ -43,9 +46,9 @@ def plot_scalar_field_end_values(functions, parameter_combination, end_values, s
         list[float]
             Returns plotting range start and end value.
         """
-        mean = np.sum(np.absolute(x_points)) / len(x_points)
-        x_low = max([x_min, x_points.min() - mean])
-        x_high = min([x_max, x_points.max() + mean])
+        std3 = np.nanstd(np.log10(np.abs(x_points)))*3
+        x_low = -10**std3
+        x_high = 10**std3
         return [x_low, x_high]
 
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -57,7 +60,7 @@ def plot_scalar_field_end_values(functions, parameter_combination, end_values, s
         y_epsilon = functions["e"](x_scalar_field, **parameter_combination)
         y_epsilon_at_inflation_end = functions["e"](end_values, **parameter_combination)
 
-        fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
+        fig, (ax2, ax1) = plt.subplots(nrows=2, ncols=1, figsize=(9, 13))
 
         # Potential graph design
         ax1.set_title("$V(\\phi)$ graph")
@@ -66,7 +69,8 @@ def plot_scalar_field_end_values(functions, parameter_combination, end_values, s
         ax1.set_xlim(plot_range(end_values, x_scalar_field.min(), x_scalar_field.max()))
         # ylim value is defined by potential values where φ = possible scalar field value
         # in the end of inflation
-        ax1.set_ylim(plot_range(y_potential_at_inflation_end, y_potential.min(), y_potential.max()))
+        ax1.set_ylim(plot_range(y_potential_at_inflation_end, y_potential_at_inflation_end.min(),
+                                y_potential_at_inflation_end.max()))
         ax1.grid(True)
 
         # Epsilon graph design
@@ -76,16 +80,22 @@ def plot_scalar_field_end_values(functions, parameter_combination, end_values, s
         ax2.set_xlim(plot_range(end_values, x_scalar_field.min(), x_scalar_field.max()))
         ax2.set_ylim([-1, 4])
         ax2.grid(True)
-        #numerate_points = [str(num) for num in range(1, len(end_values) + 1)]
-        style = dict(size=10, color='red', weight='bold', textcoords='offset pixels', xytext=(0, 6), ha='center',va='bottom' )
+        # numerate_points = [str(num) for num in range(1, len(end_values) + 1)]
+        style = dict(size=10, color='red', weight='bold', textcoords='offset pixels', xytext=(0, 6), ha='center',
+                     va='bottom')
         for num, point_x in enumerate(end_values):
-            ax1.annotate(str(num+1), (point_x, y_potential_at_inflation_end[num]), **style)
-            ax2.annotate(str(num+1), (point_x, y_epsilon_at_inflation_end[num]), **style)
-        fig.subplots_adjust(hspace=0.6)
+            ax1.annotate(str(num + 1), (point_x, y_potential_at_inflation_end[num]), **style)
+            ax2.annotate(str(num + 1), (point_x, y_epsilon_at_inflation_end[num]), **style)
+        fig.subplots_adjust(hspace=0.22)
         ax1.plot(x_scalar_field, y_potential)
         ax1.scatter(end_values, y_potential_at_inflation_end)
         ax2.plot(x_scalar_field, y_epsilon)
         ax2.scatter(end_values, y_epsilon_at_inflation_end)
+        for item in ([ax1.title, ax1.xaxis.label, ax1.yaxis.label] +
+                     ax1.get_xticklabels() + ax1.get_yticklabels() +
+                     [ax2.title, ax2.xaxis.label, ax2.yaxis.label] +
+                     ax2.get_xticklabels() + ax2.get_yticklabels()):
+            item.set_fontsize(16)
 
     return fig
 
@@ -107,25 +117,34 @@ def ask_scalar_field_end_value(end_values, ask_user_defined_point=False):
     """
 
     if ask_user_defined_point:
-        print("0. Select your own value.\n...   ")
+        print("0. Vali ise väärtus...   ")
     for num, elem in enumerate(end_values):
-        print("Point " + str(num + 1) + ". φ = " + str(elem))
-
+        print("Punkt " + str(num + 1) + ". φ = " + str(elem))
+    print("ε(φ) = 1 puhul leidub mitu lahendit.")
     def ask_cycle():
         try:
-            user_input = int(input("What point to use (enter number): "))
+            user_input = int(input("Vali lahend (sisesta number): "))
             if user_input == 0 and ask_user_defined_point:
                 while True:
                     try:
-                        user_input_2 = np.float(input("Enter approximate value (write 'back' to go back)"))
+                        user_input_2 = input("Sisesta enda valitud ligikaudne väärtus (sisesta 'back' et valida eelnevate väärtuste seast): ")
                         if user_input_2.strip() == "back":
                             break
-                        return user_input_2
+                        try:
+                            test_if_float = float(user_input_2)
+                        except:
+                            print("Error...")
+                            return ask_cycle()
                     except:
-                        print("Couldnt convert it to number.")
-            return end_values[user_input - 1]
+                        print("Konverteerimisel viga. Proovi uuesti.")
+                    return test_if_float
+            elif user_input == 0:
+                print("Vale väärtus. Proovi uuesti.")
+                return ask_cycle()
+            answer = end_values[user_input - 1]
+            return answer
         except:
-            print("There was an error.")
+            print("Error...")
             return ask_cycle()
 
     return ask_cycle()
@@ -162,6 +181,7 @@ def plot_N_function_graphs(functions, N_range):
 
     return fig
 
+
 def ask_right_N_function(functions):
     """
     This is infinite function till user chooses valid function.
@@ -188,6 +208,7 @@ def ask_right_N_function(functions):
             return ask_cycle()
 
     return ask_cycle()
+
 
 def plot(plot_type, functions_dict, parameter_combinations, N_points, N_domain,
          scalar_field_domain, scalar_field_end_values, plot_id, model_name, info):
@@ -219,7 +240,7 @@ def plot(plot_type, functions_dict, parameter_combinations, N_points, N_domain,
     """
     if plot_type not in [1, 2, 3]:
         raise errors.IncorrectValueError("Plot type must be 1, 2 or 3.")
-    
+
     with np.errstate(divide="ignore", invalid="ignore"):
         if plot_type == 1:
             if N_points is None:
@@ -237,10 +258,12 @@ def plot(plot_type, functions_dict, parameter_combinations, N_points, N_domain,
                 raise errors.WrongTypeError("Scalar field domain not defined.")
             elif scalar_field_end_values is None:
                 raise errors.WrongTypeError("End value dictionary not defined.")
-            plot3(functions_dict, parameter_combinations, scalar_field_domain, scalar_field_end_values, plot_id, model_name)
+            plot3(functions_dict, parameter_combinations, scalar_field_domain, scalar_field_end_values, plot_id,
+                  model_name)
 
         plt.legend(bbox_to_anchor=(1.01, 1.01), loc="upper left")
         plt.tight_layout()
+
 
 def plot2(functions_dict, parameter_combinations, N_domain, plot_id, model_name):
     if plt.fignum_exists(102):
@@ -300,6 +323,7 @@ def plot3(functions_dict, parameter_combinations, scalar_field_domain, scalar_fi
 
         plt.plot(domain, epsilon_values,
                  label=label_name, alpha=0.6)
+
 
 def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_name, info):
     """Function for plotting n_s - r graph.
@@ -361,26 +385,28 @@ def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_
             if info:
                 if model_name:
                     print("#{} | {} : N={}, n_s={}, r={}, φ={}".format(model_name, key, str(N),
-                                                            functions["ns"](N_function(N), **param_combination),
-                                                            functions["r"](N_function(N), **param_combination),
-                                                            N_function(N)
-                                                            )
-                        )
+                                                                       functions["ns"](N_function(N),
+                                                                                       **param_combination),
+                                                                       functions["r"](N_function(N),
+                                                                                      **param_combination),
+                                                                       N_function(N)
+                                                                       )
+                          )
                 else:
                     print("{} : N={}, n_s={}, r={}, φ={}".format(key, str(N),
-                                                            functions["ns"](N_function(N), **param_combination),
-                                                            functions["r"](N_function(N), **param_combination),
-                                                            N_function(N)
-                                                            )
-                        )
+                                                                 functions["ns"](N_function(N), **param_combination),
+                                                                 functions["r"](N_function(N), **param_combination),
+                                                                 N_function(N)
+                                                                 )
+                          )
             # Idea is to calculate n_s and r values for wanted N values and add them to dictionary
             # Then it is easier to plot them with the same markers
             if str(N) in N_points:
                 N_points[str(N)].append((functions["ns"](N_function(N), **param_combination),
-                                        functions["r"](N_function(N), **param_combination)))
+                                         functions["r"](N_function(N), **param_combination)))
             else:
                 N_points[str(N)] = [(functions["ns"](N_function(N), **param_combination),
-                                    functions["r"](N_function(N), **param_combination))]
+                                     functions["r"](N_function(N), **param_combination))]
 
     # Plot n_s - r points with certain N value
     for num, N_value in enumerate(N_points, 1):
@@ -392,3 +418,45 @@ def plot1(functions, parameter_combinations, N_values, N_domain, plot_id, model_
         plt.plot(*zip(*N_points[N_value]), markers[num], label=str(N_value), alpha=0.6, markersize=10)
 
 
+def compare_models(domain, dIF1, dIF2_values, comparisons, BAname, names):
+    len_comp = len(comparisons)
+    fig, axes = plt.subplots(nrows=len_comp, ncols=2, figsize=(15, 7 * len_comp))
+    for num, ax in enumerate(axes):
+        print("Valmistan graafikud {}. pöördfunktsiooni jaoks.".format(num))
+        ax1 = ax[0]
+        ax2 = ax[1]
+
+        ax1.set_title("$Funk. {}: ".format(num+1) + "\\phi - Abs\\left(\\frac{dI_{\\phi 1} - dI_{\\phi 2}}{dI_{\\phi 1}}\\right)$ graafik")
+        ax2.set_title("$\\phi - dI_{\\phi1}$ ja $\\phi - d_I{\\phi2}$ graafikud")
+
+        ax1.set_xlabel("$\\phi$")
+        ax2.set_xlabel("$\\phi$")
+
+        ax1.set_ylabel("Tulemuste suhe log skaalas")
+        ax2.set_ylabel("$dI_{\\phi}$")
+        ax1.set_yscale("log")
+        ax1.grid()
+        ax2.grid()
+        # Find ax2 ylim
+        good_values = (dIF1 != np.nan) & (dIF1 != np.inf) & (dIF1 != -np.inf)
+        good_values2 = (dIF2_values[num] != np.nan) & (dIF2_values[num] != np.inf) & (dIF2_values[num] != -np.inf)
+
+        ylim2 = np.nanstd(np.ceil(np.log10(np.abs(np.concatenate((dIF1[good_values], dIF2_values[num][good_values2]))))))*3
+        ax2.set_ylim(-10**ylim2, 10**ylim2)
+
+        ax1.plot(domain, comparisons[num], "red")
+        ax2.plot(domain, dIF1, label="$dI_{\\phi1} = \\sqrt{\\frac{B}{A} + \\delta_\\Gamma \ \\frac{3}{2}\\left(\\frac{A'}{A}\\right)^2}$")
+        ax2.plot(domain, dIF2_values[num], "--", alpha=0.8, label="$I_V(I_\\phi)$ pöördfunktsioonist")
+
+
+
+        for item in ([ax1.title, ax1.xaxis.label, ax1.yaxis.label] +
+                     ax1.get_xticklabels() + ax1.get_yticklabels() +
+                     [ax2.title, ax2.xaxis.label, ax2.yaxis.label] +
+                     ax2.get_xticklabels() + ax2.get_yticklabels()):
+            item.set_fontsize(16)
+        ax2.legend()
+
+    print("Kuvan graafikud. See võib võtta veidi aega.")
+    fig.subplots_adjust(hspace=0.25, wspace=0.25)
+    plt.show()

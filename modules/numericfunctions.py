@@ -5,18 +5,23 @@ from scipy.optimize import newton
 from scipy.signal import argrelextrema
 from scipy.interpolate import interp1d
 
-def find_function_roots_numerical(function, settings, method = 1):
 
+def find_function_roots_numerical(function, settings, method=1):
     x_interval = settings.create_interval_list()
     if method == 1:
         dx = settings.root_precision
         roots = find_root_method_one(function, x_interval)
-        if len(roots)>=1:
+        if len(roots) >= 1:
             return roots[(function(roots) < dx) & (function(roots) > -dx)]
         else:
             return np.array([])
     elif method == 2:
-        pass
+        dx = settings.root_precision
+        roots = find_root_method_one(function, x_interval)
+        if len(roots) >= 1:
+            return roots
+        else:
+            return np.array([])
 
 def find_root_method_one(function, x_interval):
     """
@@ -43,6 +48,13 @@ def find_root_method_one(function, x_interval):
     return x_interval[argrelextrema(func_x, np.less)]
 
 
+def find_root_method_two(function, x_interval):
+    # Find places where it changes from positive to negative or other way
+    y = function(x_interval)
+    sign = np.sign(y)
+    zeros = (np.roll(sign, 1) - sign) != 0
+    return x_interval[zeros]
+
 def find_root_newton(function, x0, fprime=None, fprime2=None):
     """
     Calcualte more precise minima value.
@@ -65,6 +77,7 @@ def find_root_newton(function, x0, fprime=None, fprime2=None):
     """
     return newton(func=function, x0=x0, fprime=fprime, fprime2=fprime2)
 
+
 # returns value so that x-axis is N_values and y-axis are scalar field initial values
 def integrate_N_fold_numerical(function, end_value, N_list):
     """
@@ -84,6 +97,7 @@ def integrate_N_fold_numerical(function, end_value, N_list):
     scipy.interp1d
         Function φ(N)
     """
+
     def integrate_function(y, x):
         return function(y)
 

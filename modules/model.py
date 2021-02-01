@@ -1,8 +1,7 @@
 import sympy as sp
 import numpy as np
-import scipy as sc
 from scipy.misc import derivative
-
+from sympy.calculus.util import continuous_domain, minimum
 import matplotlib.pyplot as plt
 
 import re
@@ -15,7 +14,7 @@ import modules.numericfunctions as numeric_solver
 
 from modules.config import Settings
 import modules.plotter as plotter
-from modules.function import FunctionA, FunctionB, FunctionV, FunctionIV
+from modules.function import FunctionA, FunctionB, FunctionV, FunctionIV, symbolic_to_numeric
 import modules.errors as errors
 
 
@@ -74,7 +73,7 @@ def _convert_dictionary_strings_to_symbols(dictionary):
 
 class BaseModel:
 
-    def __init__(self, settings, A=None, B=None, V=None, IV=None, **kwargs):
+    def __init__(self, settings, A=None, B=None, V=None, IV=None, formalism="Metric", **kwargs):
         """
         Base class for Inflation model. This defines single combination of (A,B,V) or (IV) as model
         which is later used in other class to calculate observable parameters.
@@ -93,18 +92,18 @@ class BaseModel:
             Required if calculation is done with only IV, by default None
         """
         self.settings = settings
+        self.settings.formalism = formalism
+        self.mode = None
 
         self.A = A
         self.B = B
         self.V = V
         self.IV = IV
-
         # Three possible variants:
         # 0 = Mode not defined
         # 1 = Function mode
         # 2 = Invariant mode
-        self.mode = None
-        #
+        self.update_mode()
         self._symbol = sp.Symbol("x", real=True)
 
         #
@@ -116,17 +115,25 @@ class BaseModel:
     @property
     def mode(self):
         return self.__mode
+
     @mode.setter
     def mode(self, mode):
-        if all([x is not None for x in [self.A, self.B, self.V]]):
-            self.__mode = 1
-        elif self.IV is not None:
-            self.__mode = 2
-        elif isinstance(mode, int) and mode in [0,1,2]:
+        if isinstance(mode, int) and mode in [0, 1, 2, 3]:
             self.__mode = mode
         else:
             self.__mode = 0
-            #print("For calculations define (A,B,V) functions or IV function.")
+            # print("For calculations define (A,B,V) functions or IV function.")
+
+    def update_mode(self):
+        if all([x is not None for x in [self.A, self.B, self.V]]) and self.IV is not None:
+            self.mode = 3
+        elif all([x is not None for x in [self.A, self.B, self.V]]):
+            self.mode = 1
+        elif self.IV is not None:
+            self.mode = 2
+        else:
+            self.mode = 0
+
     @property
     def A(self):
         return self.__A
@@ -141,6 +148,10 @@ class BaseModel:
             self.__A = None
         else:
             raise errors.WrongTypeError("Function A must be FunctionA type.")
+
+        if all(hasattr(self, x) for x in ["_BaseModel__A", '_BaseModel__B', '_BaseModel__V', '_BaseModel__IV']):
+            self.update_mode()
+
     @property
     def B(self):
         return self.__B
@@ -155,6 +166,8 @@ class BaseModel:
             self.__B = None
         else:
             raise errors.WrongTypeError("Function B must be FunctionB type.")
+        if all(hasattr(self, x) for x in ["_BaseModel__A", '_BaseModel__B', '_BaseModel__V', '_BaseModel__IV']):
+            self.update_mode()
 
     @property
     def V(self):
@@ -171,6 +184,9 @@ class BaseModel:
         else:
             raise errors.WrongTypeError("Function V must be FunctionV type.")
 
+        if all(hasattr(self, x) for x in ["_BaseModel__A", '_BaseModel__B', '_BaseModel__V', '_BaseModel__IV']):
+            self.update_mode()
+
     @property
     def IV(self):
         return self.__IV
@@ -186,6 +202,9 @@ class BaseModel:
         else:
             raise errors.WrongTypeError("Function IV must be FunctionIV type.")
 
+        if all(hasattr(self, x) for x in ["_BaseModel__A", '_BaseModel__B', '_BaseModel__V', '_BaseModel__IV']):
+            self.update_mode()
+
     def _all_functions_symbolic(self):
         """
         Check if all functions have symbolic function defined.
@@ -200,7 +219,7 @@ class BaseModel:
         errors.ModeError
             If self.mode == 0 in other words mode is not defined because combination of (A,B,V) or IV is not defined.
         """
-        if self.mode == 1:
+        if self.mode == 1 or self.mode == 3:
             return all(x.symbolic_function_defined() for x in [self.A, self.B, self.V])
         elif self.mode == 2:
             return self.IV.symbolic_function_defined()
@@ -222,7 +241,7 @@ class BaseModel:
         errors.ModeError
             If self.mode == 0 in other words mode is not defined because combination of (A,B,V) or IV is not defined.
         """
-        if self.mode == 1:
+        if self.mode == 1 or self.mode == 3:
             symbols = list(set(self.A._parameter_symbols(
             ) + self.B._parameter_symbols() + self.V._parameter_symbols()))
             symbols.sort()
@@ -248,13 +267,14 @@ class BaseModel:
         errors.ModeError
             If self.mode == 0 in other words mode is not defined because combination of (A,B,V) or IV is not defined.
         """
-        if self.mode == 1:
-            symbols = list(self.A.f_s().free_symbols | self.B.f_s().free_symbols | self.V.f_s().free_symbols - set([self._symbol]))
+        if self.mode == 1 or self.mode == 3:
+            symbols = self.A.f_s().free_symbols | self.B.f_s().free_symbols | self.V.f_s().free_symbols
+            symbols = symbols - {self._symbol}
+            symbols = list(symbols)
             symbols.sort(key=str)
-
         elif self.mode == 2:
             symbols = sorted(
-                list(self.IV.f_s().free_symbols - set([self._symbol])), key=str)
+                list(self.IV.f_s().free_symbols - {self._symbol}), key=str)
         else:
             raise errors.ModeError("Can't get function free parameters\n" +
                                    "because combination of (A,B,V) functions or IV function is not defined.")
@@ -267,7 +287,8 @@ class BaseModel:
         Returns
         -------
         dict
-            Returns dictionary where keys are parameter symbol (as strings) and key values are user defined numerical values.
+            Returns dictionary where keys are parameter symbol (as strings) and key values are user defined numerical
+             values.
 
         Raises
         ------
@@ -277,7 +298,8 @@ class BaseModel:
         # To split user numerical input
         if self.mode == 0:
             raise errors.ModeError(
-                "Can't define parameter values. User must define combination of (A,B,V) functions or IV function to carry on.")
+                "Can't define parameter values. User must define combination of (A,B,V) functions or IV function to "
+                "carry on.")
 
         parameter_value_dict = {}
         decimal_regex = re.compile("[-+]?\d*\.\d+|[-+]?\d+")
@@ -285,19 +307,25 @@ class BaseModel:
         # Sorted tuple of parameter symbols
         parameters = self._return_parameter_symbols()
 
-        print("All symbols are: {}".format(parameters))
+        print("Kõik sümbolid on: {}".format(parameters))
         for parameter in parameters:
             while True:
                 try:
-                    print("Enter parameter '{}' values. For decimals use dot ('.'). \n Separate numbers with commas or space.".format(
-                        parameter))
-                    user_input = input("Enter '{}' value(s) here --->: ".format(parameter))
+                    print(
+                        "Sisesta parameetri '{}' väärtused. Komaga arvude jaoks kasuta ('.'). \n Numbrid eralda komadega või tühikuga.".format(
+                            parameter))
+                    user_input = input(
+                        "Siseta '{}' väärtus(ed) siia --->: ".format(parameter))
                     # Find all possible parameter values.
                     user_input = np.unique(
-                        [np.float(x) for x in decimal_regex.findall(user_input)])
+                        [np.int(x) if float(x).is_integer() else np.float(x) for x in
+                         decimal_regex.findall(user_input)])
+                    if len(user_input) == 0:
+                        raise errors.WrongValueError(
+                            "Kasutaja peab sisestama vähemalt ühe väärtuse.")
                     break
                 except:
-                    print("Try to enter parameters again. Something went wrong.")
+                    print("Proovi uuesti. Probleem sisestamisel või konverteerimisel.")
             parameter_value_dict[str(parameter)] = user_input
 
         return parameter_value_dict
@@ -329,11 +357,40 @@ class BaseModel:
     def return_formalism(self):
         return self.settings.formalism
 
+    def change_inteval(self):
+        print("Muuda skalaarvälja määramispiirkonda.")
+        print("Hetkel on: [{}, {} ]".format(self.settings.scalar_field_range[0], self.settings.scalar_field_range[1]))
+        def ask_start():
+            try:
+                start_value = np.float(input("Sisesta algväärtus: "))
+                return start_value
+            except:
+                print("Error. Viga teisendamisel.")
+                ask_start()
+
+        start = ask_start()
+
+        def ask_end():
+            try:
+                end_value = np.float(input("Sisesta lõppväärtus: "))
+                if end_value >= start:
+                    raise TypeError
+                return end_value
+            except TypeError:
+                print("Error. Lõppväärtus peab olema väiksem kui algväärtus.")
+                ask_end()
+            except:
+                print("Error. Viga teisendamisel.")
+                ask_end()
+
+        end = ask_end()
+
+        self.settings.scalar_field_range = [start, end]
 
 class CalculationModel(BaseModel):
     """
-    In this class all possible calculations with inflation functions are defined.
-    Used to calculate F, scalar-tensor pertubation ratio r, scalar spectral index ns, epsilon ε which defines inflation end point.
+    In this class all possible calculations with inflation functions are defined. Used to calculate F, scalar-tensor
+    pertubation ratio r, scalar spectral index ns, epsilon ε which defines inflation end point.
     """
 
     def __init__(self, settings, A=None, B=None, V=None, IV=None, **kwargs):
@@ -382,9 +439,10 @@ class CalculationModel(BaseModel):
             If formalism in settings is wrong. Must be "Metric" or "Palatini".
         """
         if self.settings.formalism == "Metric":
-            return self.B.f_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs) + 3 / 2 * (self.A.d_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs)) ** 2
+            return self.B.f_n(x=x, **kwargs) / (self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc) + 3 / 2 * (
+                    self.A.d_n(x=x, **kwargs) / (self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc)) ** 2
         elif self.settings.formalism == "Palatini":
-            return self.B.f_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs)
+            return self.B.f_n(x=x, **kwargs) / (self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc)
         else:
             raise errors.FormalismError(
                 "Formalism must be 'Metric' or 'Palatini'.")
@@ -418,15 +476,14 @@ class CalculationModel(BaseModel):
         array_like
             F function derivative values in position x
         """
-        if self._all_functions_symbolic():
-            symbolic_dF = self.dF_s()
-            symbols = (self._symbol, ) + \
-                self._return_parameter_symbolic_symbols()
+        if self._all_functions_symbolic() and self.settings.symbolic_to_numeric:
+            symbolic_dF = symbolic_to_numeric(self.dF_s())
+            symbols = (self._symbol,) + self._return_parameter_symbolic_symbols()
             numeric_dF = sp.lambdify(symbols, symbolic_dF, "numpy")
             return numeric_dF(x, **kwargs)
         else:
-            def temp_F(y): return self.F_n(x=y, **kwargs)
-            return derivative(func=temp_F, x0=x, dx=self.settings.dx, n=1)
+            temp_F = lambda y: self.F_n(x=y, **kwargs)
+            return derivative(func=temp_F, x0=x, dx=self.settings.derivative_dx, n=1)
 
     def r_s(self):
         """
@@ -443,10 +500,10 @@ class CalculationModel(BaseModel):
             If program tries to calculate symbolically but not all functions are symbolic.
         """
         # Case where are defined A, B, V
-        if self._all_functions_symbolic() and self.mode == 1:
+        if self._all_functions_symbolic() and self.mode == 1 or self.mode == 3:
             return (8 / self.F_s()) * (
-                (self.V.d_s() * self.A.f_s() - 2 * self.V.f_s() * self.A.d_s())
-                / (self.A.f_s() * self.V.f_s())
+                    (self.V.d_s() * self.A.f_s() - 2 * self.V.f_s() * self.A.d_s())
+                    / (self.A.f_s() * self.V.f_s())
             ) ** 2
         # Case where is defined IV
         elif self._all_functions_symbolic() and self.mode == 2:
@@ -457,25 +514,27 @@ class CalculationModel(BaseModel):
 
     def r_n(self, x, **kwargs):
         """
-        Calculate tensor-to-scalar pertubation ratio values. If possible use symbolic functions to define function and then calculate values.
+        Calculate tensor-to-scalar pertubation ratio values. If possible use symbolic functions to define function
+        and then calculate values.
 
         Returns
         -------
         array_like
             F function derivative values in position x
         """
-        if self._all_functions_symbolic():
-            symbols = (self._symbol, ) + \
-                self._return_parameter_symbolic_symbols()
-            numeric_r = sp.lambdify(symbols, self.r_s(), "numpy")
+        if self._all_functions_symbolic() and self.settings.symbolic_to_numeric:
+            symbols = (self._symbol,) + \
+                      self._return_parameter_symbolic_symbols()
+            temp_function = symbolic_to_numeric(self.r_s())
+            numeric_r = sp.lambdify(symbols, temp_function, "numpy")
             return numeric_r(x, **kwargs)
         else:
             # A, B and V are defined
-            if self.mode == 1:
-                return (8 / self.F_n(x=x, **kwargs)) * (
-                    (self.V.d_n(x=x, **kwargs) * self.A.f_n(x=x, **kwargs) -
-                     2 * self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs))
-                    / (self.A.f_n(x=x, **kwargs) * self.V.f_n(x=x, **kwargs))
+            if self.mode == 1 or self.mode == 3:
+                return (8 / (self.F_n(x=x, **kwargs) + self.settings.divisor_inc)) * (
+                        (self.V.d_n(x=x, **kwargs) * self.A.f_n(x=x, **kwargs) -
+                         2 * self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs))
+                        / (self.A.f_n(x=x, **kwargs) * self.V.f_n(x=x, **kwargs) + self.settings.divisor_inc)
                 ) ** 2
             # IV is defined
             elif self.mode == 2:
@@ -496,14 +555,14 @@ class CalculationModel(BaseModel):
             If program tries to calculate symbolically but not all functions are symbolic.
         """
         # Functions A, B and V are defined
-        if self._all_functions_symbolic() and self.mode == 1:
+        if self._all_functions_symbolic() and (self.mode == 1 or self.mode == 3):
             return 1 - 3 * self.r_s() / 8 + (2 / (self.V.f_s() * self.F_s())) * (
-                self.V.dd_s() - 4 * self.V.d_s() * self.A.d_s() / self.A.f_s() -
-                self.V.d_s() * self.dF_s() / (2 * self.F_s()) -
-                2 * self.V.f_s() * self.A.dd_s() / self.A.f_s() +
-                6 * self.V.f_s() * (self.A.d_s() / self.A.f_s()) ** 2 +
-                (self.V.f_s() * self.A.d_s() * self.dF_s()) /
-                (self.A.f_s() * self.F_s())
+                    self.V.dd_s() - 4 * self.V.d_s() * self.A.d_s() / self.A.f_s() -
+                    self.V.d_s() * self.dF_s() / (2 * self.F_s()) -
+                    2 * self.V.f_s() * self.A.dd_s() / self.A.f_s() +
+                    6 * self.V.f_s() * (self.A.d_s() / self.A.f_s()) ** 2 +
+                    (self.V.f_s() * self.A.d_s() * self.dF_s()) /
+                    (self.A.f_s() * self.F_s())
             )
         # Function IV is defined
         elif self._all_functions_symbolic() and self.mode == 2:
@@ -514,33 +573,42 @@ class CalculationModel(BaseModel):
 
     def ns_n(self, x, **kwargs):
         """
-        Calculate scalar spectral index values. If possible use symbolic functions to define function and then calculate values.
+        Calculate scalar spectral index values. If possible use symbolic functions to define function and then
+        calculate values.
 
         Returns
         -------
         array_like
             scalar spectral index n_s  values in position x
         """
-        if self._all_functions_symbolic():
-            symbols = (self._symbol, ) + \
-                self._return_parameter_symbolic_symbols()
-            numeric_n = sp.lambdify(symbols, self.ns_s(), "numpy")
+        if self._all_functions_symbolic() and self.settings.symbolic_to_numeric:
+            symbols = (self._symbol,) + \
+                      self._return_parameter_symbolic_symbols()
+            temp_function = symbolic_to_numeric(self.ns_s())
+            numeric_n = sp.lambdify(symbols, temp_function, "numpy")
             return numeric_n(x, **kwargs)
         else:
             # Functions A, B and V are defined
-            if self.mode == 1:
-                return 1 - 3 * self.r_n(x=x, **kwargs) / 8 + (2 / (self.V.f_n(x=x, **kwargs) * self.F_n(x=x, **kwargs))) * (
-                    self.V.dd_n(x=x, **kwargs) -
-                    4 * self.V.d_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs) -
-                    self.V.d_n(x=x, **kwargs) * self.dF_n(x=x, **kwargs) / (2 * self.F_n(x=x, **kwargs)) -
-                    2 * self.V.f_n(x=x, **kwargs) * self.A.dd_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs) +
-                    6 * self.V.f_n(x=x, **kwargs) * (self.A.d_n(x=x, **kwargs) / self.A.f_n(x=x, **kwargs)) ** 2 +
-                    (self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs) * self.dF_n(x=x, **kwargs)) /
-                    (self.A.f_n(x=x, **kwargs) * self.F_n(x=x, **kwargs))
-                )
+            if self.mode == 1 or self.mode == 3:
+                return 1 - 3 * self.r_n(x=x, **kwargs) / 8 + (
+                        2 / (self.V.f_n(x=x, **kwargs) * self.F_n(x=x, **kwargs) + self.settings.divisor_inc)) * (
+                               self.V.dd_n(x=x, **kwargs) -
+                               4 * self.V.d_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs) / (
+                                       self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc) -
+                               self.V.d_n(x=x, **kwargs) * self.dF_n(x=x, **kwargs) / (
+                                       2 * self.F_n(x=x, **kwargs) + self.settings.divisor_inc) -
+                               2 * self.V.f_n(x=x, **kwargs) * self.A.dd_n(x=x, **kwargs) / (
+                                       self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc) +
+                               6 * self.V.f_n(x=x, **kwargs) * (
+                                       self.A.d_n(x=x, **kwargs) / (
+                                       self.A.f_n(x=x, **kwargs) + self.settings.divisor_inc)) ** 2 +
+                               (self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs) * self.dF_n(x=x, **kwargs)) /
+                               (self.A.f_n(x=x, **kwargs) * self.F_n(x=x, **kwargs) + self.settings.divisor_inc)
+                       )
             # Function IV is defined
             elif self.mode == 2:
-                return 1 - 6 * self.epsilon_n(x, **kwargs) + 2/self.IV.f_n(x=x, **kwargs) * self.IV.dd_n(x, **kwargs)
+                return 1 - 6 * self.epsilon_n(x, **kwargs) + 2 / (
+                        self.IV.f_n(x=x, **kwargs) * self.IV.dd_n(x, **kwargs) + self.settings.divisor_inc)
 
     def N_integrand_s(self):
         """
@@ -557,7 +625,7 @@ class CalculationModel(BaseModel):
             If program tries to calculate symbolically but not all functions are symbolic.
         """
         # Functions A, B and V are defined
-        if self._all_functions_symbolic() and self.mode == 1:
+        if self._all_functions_symbolic() and (self.mode == 1 or self.mode == 3):
             return ((self.A.f_s() * self.V.f_s() * self.F_s()) /
                     (self.V.d_s() * self.A.f_s() - 2 * self.V.f_s() * self.A.d_s())
                     )
@@ -578,21 +646,22 @@ class CalculationModel(BaseModel):
         array_like
             N_integrand values in position x
         """
-        if self._all_functions_symbolic():
-            symbols = (self._symbol, ) + \
-                self._return_parameter_symbolic_symbols()
-            numeric_N = sp.lambdify(symbols, self.N_integrand_s(), "numpy")
+        if self._all_functions_symbolic() and self.settings.symbolic_to_numeric:
+            symbols = (self._symbol,) + \
+                      self._return_parameter_symbolic_symbols()
+            temp_function = symbolic_to_numeric(self.N_integrand_s())
+            numeric_N = sp.lambdify(symbols, temp_function, "numpy")
             return numeric_N(x, **kwargs)
         else:
             # Functions A, B and V are defined
-            if self.mode == 1:
+            if self.mode == 1 or self.mode == 3:
                 return ((self.A.f_n(x=x, **kwargs) * self.V.f_n(x=x, **kwargs) * self.F_n(x=x, **kwargs)) /
                         (self.V.d_n(x=x, **kwargs) * self.A.f_n(x=x, **kwargs) -
-                         2 * self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs))
+                         2 * self.V.f_n(x=x, **kwargs) * self.A.d_n(x=x, **kwargs) + self.settings.divisor_inc)
                         )
             # Function IV is defined
             elif self.mode == 2:
-                return self.IV.f_n(x, **kwargs) / self.IV.d_n(x, **kwargs)
+                return self.IV.f_n(x, **kwargs) / (self.IV.d_n(x, **kwargs) + self.settings.divisor_inc)
 
     def epsilon_s(self):
         """
@@ -610,11 +679,11 @@ class CalculationModel(BaseModel):
             If program tries to calculate symbolically but not all functions are symbolic.
         """
         # Functions A, B and V are defined
-        if self._all_functions_symbolic() and self.mode == 1:
+        if self._all_functions_symbolic() and (self.mode == 1 or self.mode == 3):
             return self.r_s() / 16
         # Function IV is defined
         if self._all_functions_symbolic() and self.mode == 2:
-            return 1 / 2 * (self.IV.d_s()/self.IV.f_s()) ** 2
+            return 1 / 2 * (self.IV.d_s() / self.IV.f_s()) ** 2
         else:
             raise errors.AllFunctionsNotSymbolic(
                 "All functions are not symbolically defined.")
@@ -629,17 +698,18 @@ class CalculationModel(BaseModel):
         array_like
             epsilon (ε) values in position x
         """
-        if self._all_functions_symbolic():
-            symbols = (self._symbol, ) + \
-                self._return_parameter_symbolic_symbols()
-            return sp.lambdify(symbols, self.epsilon_s(), "numpy")(x, **kwargs)
+        if self._all_functions_symbolic() and self.settings.symbolic_to_numeric:
+            symbols = (self._symbol,) + \
+                      self._return_parameter_symbolic_symbols()
+            temp_function = symbolic_to_numeric(self.epsilon_s())
+            return sp.lambdify(symbols, temp_function, "numpy")(x, **kwargs)
         else:
             # Functions A, B and V are defined
-            if self.mode == 1:
+            if self.mode == 1 or self.mode == 3:
                 return self.r_n(x, **kwargs) / 16
             # Function IV is defined
             elif self.mode == 2:
-                return 1 / 2 * (self.IV.d_n(x, **kwargs)/self.IV.f_n(x, **kwargs)) ** 2
+                return 1 / 2 * (self.IV.d_n(x, **kwargs) / (self.IV.f_n(x, **kwargs) + self.settings.divisor_inc)) ** 2
 
 
 class InflationModel(CalculationModel):
@@ -650,14 +720,13 @@ class InflationModel(CalculationModel):
     def __init__(self, settings=None, A=None, B=None, V=None, IV=None, name=None, **kwargs):
         if settings is None:
             settings = Settings()
-        
+
         super().__init__(settings, A=A, B=B, V=V, IV=IV, **kwargs)
 
         # Dictionaries which keys are defined by parameters and their values. Uses function _create_parameter_key
         self.end_values = {}
         self.N_functions = {}
         self.name = name
-
 
     def _ask_function(self, function_name):
         """
@@ -668,29 +737,29 @@ class InflationModel(CalculationModel):
         function_name : string
             Function name
         """
-        print("Enter function {}.".format(function_name))
+        print("Sisesta funktsioon {}.".format(function_name))
         while True:
-            user_input = input("Write here --> ")
+            user_input = input("Siia--> ")
             if function_name == "A":
                 try:
                     self.A = FunctionA(user_input, self.settings)
                 except:
-                    print("Incorrect input. Try again.")
+                    print("Viga sisestusel. Proovi uuesti.")
             elif function_name == "B":
                 try:
                     self.B = FunctionB(user_input, self.settings)
                 except:
-                    print("Incorrect input. Try again.")
+                    print("Viga sisestusel. Proovi uuesti.")
             elif function_name == "V":
                 try:
                     self.V = FunctionV(user_input, self.settings)
                 except:
-                    print("Incorrect input. Try again.")
+                    print("Viga sisestusel. Proovi uuesti.")
             if function_name == "IV":
                 try:
                     self.IV = FunctionIV(user_input, self.settings)
                 except:
-                    print("Incorrect input. Try again.")
+                    print("Viga sisestusel. Proovi uuesti.")
 
     def initialize(self):
         """
@@ -700,7 +769,7 @@ class InflationModel(CalculationModel):
         print("Choose what functions to use:\n1) A, B, V\n2) I_V")
         while True:
             user_input = input("Enter mode number --> ")
-            if user_input in ["1","2"]:
+            if user_input in ["1", "2"]:
                 mode = int(user_input)
                 break
             else:
@@ -724,7 +793,124 @@ class InflationModel(CalculationModel):
         self.parameter_values = self._define_parameter_values()
         self.parameter_combinations = self._combine_parameter_values()
 
-    def _find_field_end_value(self, parameter_combination, method="numeric", return_value=False, info=True, subprocess_info=False):
+    def domain_is_continuous(self, parameter_combination, *functions):
+        try:
+            parameter_values = _convert_dictionary_strings_to_symbols(parameter_combination)
+            settings_domain = sp.Interval(*self.settings.scalar_field_range)
+            functions_domain = sp.Reals
+            for func in functions:
+                func_domain = continuous_domain(func.subs(parameter_values), self._symbol, sp.Reals)
+                functions_domain = functions_domain.intersect(func_domain)
+
+            if not settings_domain.intersect(functions_domain) == settings_domain:
+                def convert_interval(interval):
+                    interval = str(interval)
+                    if interval == "Reals":
+                        return "Reals"
+                    answer = []
+                    interval_list = interval.split("Interval")
+                    for sub in interval_list:
+                        search = re.search("\(.*\)", str(sub))
+                        if search:
+                            result = search.group(0).replace("))", ")")
+                            if "open" not in sub:
+                                result = result.replace("(", "[").replace(")", "]").replace("oo]", "oo)").replace(
+                                    "[-oo", "(-oo")
+                            answer.append(result)
+                    return " U ".join(answer)
+
+                print("\n***** Hoiatus! Tulemused võivad olla mitte usaldusväärsed. ******")
+                print("Probleem skalaarvälja φ määramispiirkonnaga.")
+                print("Sätete φ määramispiirkond ∈ {}".format(convert_interval(settings_domain)))
+                print("Funktsioonide φ määramispiirkond  ∈ {}".format(convert_interval(functions_domain)))
+                print("***** Hoiatus! Tulemused võivad olla mitte usaldusväärsed. ******\n")
+            else:
+                print("***** Skalaarvälja määramispiirkond peaks olema OK. *****")
+        except:
+            print("***** Ei saanud kontrollida skalaarvälja määramispiirkonna sobivust. *****")
+
+    def domain_is_valid(self, parameter_combination):
+        # Check if A and B/A + 3/2(A'/A)^2 is valid - in other wordse these functions must be positive.
+        try:
+            parameter_values = _convert_dictionary_strings_to_symbols(parameter_combination)
+            domain_settings = sp.Interval(*self.settings.scalar_field_range)
+            a_minimum = minimum(self.A.f_s().subs(parameter_values), self._symbol, domain_settings)
+            ba_minimum = minimum(self.F_s().subs(parameter_values), self._symbol, domain_settings)
+            if a_minimum > 0 and ba_minimum > 0:
+                print("***** A(φ) ja F(φ) funktsioonid määratud piirkonnas on positiivsed. *****")
+            else:
+                print("***** A(φ) ja F(φ) funktsioonid määratud piirkonnas ei ole alati positiivsed! *****")
+                print("***** Programmi tulemused võivad olla valed *****")
+        except:
+            print("***** Ei saanud kontrollida A(φ) ja F(φ) funktsioonide sobivust. *****")
+
+    def check_models(self, **kwargs):
+        def compare_results(res1, res2):
+            return np.abs((res1 - res2) / res2)
+
+        if not all(x.symbolic_function_defined() for x in [self.A, self.B, self.V, self.IV]):
+            print("KõiK funktsioonid A, B, V ja IV peavad olema defineeritud.")
+            return
+
+        symbols = self.A.f_s().free_symbols | self.B.f_s().free_symbols | self.V.f_s().free_symbols | self.IV.f_s().free_symbols
+        symbols = symbols - {self._symbol}
+        symbols = set([str(symbol) for symbol in symbols])
+        inserted_symbols = set(kwargs.keys())
+        if not inserted_symbols == symbols:
+            print("Kõik parameetrid ei ole defineeritud.")
+            print("Defineeri parameetrid: ", inserted_symbols ^ symbols)
+        print("1) Otsin pöördfunktsioone.")
+        try:
+            parameter_values = _convert_dictionary_strings_to_symbols(dict(kwargs))
+            IF_solutions = symbolic_solver.run_IF_calculation_symbolical(self.IV.f_s().subs(parameter_values),
+                                                                         self.settings.timeout)
+            VA2 = self.V.f_s().subs(parameter_values) / self.A.f_s().subs(parameter_values) ** 2
+            # Find all invariant scalar field derivatives
+            dIF_functions = [sp.diff(func.subs(self._symbol, VA2), self._symbol) for func in IF_solutions]
+            dIF2_num = [sp.lambdify(self._symbol, x, "numpy") for x in dIF_functions]
+
+        except Exception as e:
+            print(e)
+            print("Ei saanud arvutada pöördfunktsiooni sümbolkujul.")
+            print("Ei saa kontrollida mudelite samasust.")
+            return
+        print("   Pöördfunktsioon(id) leitud.")
+        domain = self.settings.scalar_field_domain_plot
+        print("2) Arvutan funktsioonide väärtused.")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            A_values = self.A.f_n(domain, **kwargs)
+            F_values = self.F_n(domain, **kwargs)
+            if isinstance(A_values, int) or isinstance(A_values, float):
+                A_values = np.full(domain.shape[0], A_values)
+            if isinstance(F_values, int) or isinstance(F_values, float):
+                F_values = np.full(domain.shape[0], F_values)
+
+            A_pos = (A_values > 0) & (A_values != np.inf) & (A_values != np.nan) & (A_values != -np.inf)
+            F_pos = (F_values > 0) & (F_values != np.inf) & (F_values != np.nan) & (F_values != -np.inf)
+
+            AF_pos = A_pos & F_pos
+            valid_domain = domain[AF_pos]
+
+            # Calculate derivative values
+            dIF1 = np.sqrt(self.F_n(valid_domain, **kwargs))
+            if isinstance(dIF1, int) or isinstance(dIF1, float):
+                dIF1 = np.full(valid_domain.shape[0], dIF1)
+
+            dIF2 = [func(valid_domain) for func in dIF2_num]
+            dIF2 = [np.full(valid_domain.shape[0], func) if isinstance(func, int) or isinstance(func, float) else func for func in dIF2]
+
+            comparisons = [compare_results(dIF1, array) for array in dIF2]
+            comparisons = [np.full(valid_domain.shape[0], comp) if isinstance(comp, int) or isinstance(comp, float) else comp for comp in
+                           comparisons]
+
+            names = [sp.latex(func) for func in IF_solutions]
+            BAname = sp.latex(sp.sqrt(self.F_s().subs(parameter_values)))
+
+            print("3) Koostan graafikuid.")
+            plotter.compare_models(valid_domain, dIF1, dIF2, comparisons, BAname, names)
+
+    def _find_field_end_value(self, parameter_combination, method="numeric", return_value=False, info=True,
+                              subprocess_info=False):
         """
         Define process to calculate scalar field value in the end of inflation.
 
@@ -752,37 +938,43 @@ class InflationModel(CalculationModel):
         # First define used key
         key = _create_parameter_key(parameter_combination)
 
+        # Check defined scalar field domain compatibility
+        if self.mode in [1, 3]:
+            self.domain_is_continuous(parameter_combination, self.A.f_s(), self.B.f_s(), self.V.f_s(), self.epsilon_s())
+        else:
+            self.domain_is_continuous(parameter_combination, self.IV.f_s(), self.epsilon_s())
+
         with np.errstate(divide="ignore", invalid="ignore"):
             if info:
-                print("***** Calculating scalar field end value *****")
+                print("***** Arvutan skalaarvälja lõppväärtust *****")
                 print("***** {} *****".format(key))
                 start_time = time.perf_counter()
             if method == "symbolic":
                 try:
                     if info:
-                        print("***** Calculating symbolically *****")
+                        print("***** Arvutan sümboolselt *****")
                     value = self._find_field_end_value_symbolic(
                         parameter_combination, info, subprocess_info)
                 except (errors.TimeoutError, errors.NoSolutionError) as e:
                     print(e)
                     print(
-                        "Couldn't solve symbolically. Trying to calculate numerically.")
+                        "Ei saanud sümboolselt arvutada. Proovin lahendada numbriliselt.")
                     value = self._find_field_end_value_numeric(
                         parameter_combination, info, subprocess_info)
             elif method == "numeric":
                 if info:
-                    print("***** Calculating numerically *****")
+                    print("***** Arvutan numbriliselt *****")
                 value = self._find_field_end_value_numeric(
                     parameter_combination, info, subprocess_info)
             else:
                 raise errors.WrongValueError(
-                    "method must be 'symbolic' or 'numeric'.")
+                    "method peab olema 'symbolic' või 'numeric'.")
 
             if info:
                 end_time = time.perf_counter()
-                print("***** Inflation ends at φ = {:.6f} *****".format(value))
-                print("Time taken: {:.2f} s.".format(end_time - start_time))
-                print("***** Scalar field end value found *****")
+                print("***** Inflatsioon lõppeb φ = {:.6f} *****".format(value))
+                print("Aeg: {:.2f} s.".format(end_time - start_time))
+                print("***** Skalaarvälja lõppväärtus leitud. *****")
 
             self.end_values[key] = value
 
@@ -823,28 +1015,29 @@ class InflationModel(CalculationModel):
         if self.settings.simplify:
             print("Simplifying:")
             epsilon = sp.simplify(
-                epsilon, inverse=self.settings.inverse, rational=self.settings.rational)
+                epsilon, inverse=self.settings.simplify_inverse, rational=self.settings.simplify_rational)
 
         if subprocess_info:
-            print("End value function: {}=0".format(sp.latex(epsilon - 1)))
+            print("ε(φ)-1 funktsioon : {}=0".format(sp.latex(epsilon - 1)))
 
         if info:
-            print("***** Starting to find zeroes *****")
+            print("***** Otsin nullkohti *****")
             start_time = time.perf_counter()
+
         end_value_list = symbolic_solver.run_end_value_calculation_symbolical(
             epsilon, time=self.settings.timeout)
 
         if info:
             end_time = time.perf_counter()
-            print("***** Zeroes found *****")
-            print("Time taken: {:.2f} s.".format(end_time - start_time))
+            print("***** Nullkohad leitud *****")
+            print("Aeg: {:.2f} s.".format(end_time - start_time))
         # Checks if end values are in predefined interval
         end_value_list = np.array([x for x in end_value_list if
-                                   self.settings.interval[0] <= x <= self.settings.interval[1]])
+                                   self.settings.scalar_field_range[0] <= x <= self.settings.scalar_field_range[1]])
 
         if len(end_value_list) == 0:
             raise errors.NoSolutionError(
-                "No end value found. Changing interval might help.")
+                "Nullkohti ei leitud. Proovi muuta määramispiirkonda.")
         elif len(end_value_list) == 1:
             end_value = end_value_list[0]
         else:
@@ -853,10 +1046,15 @@ class InflationModel(CalculationModel):
 
             figure = plotter.plot_scalar_field_end_values(
                 plotter_functions, parameter_combination, end_value_list, self.settings.scalar_field_domain_plot)
-            figure.show()
-            end_value = plotter.ask_scalar_field_end_value()
+            # Display picture with plt.show() in jupyter, as only this is viable method.
             if not _ipython_info():
                 figure.show()
+            else:
+                plt.show()
+            end_value = plotter.ask_scalar_field_end_value(end_value_list)
+
+            if _ipython_info():
+                plt.close()
 
         return np.float(end_value)
 
@@ -900,13 +1098,17 @@ class InflationModel(CalculationModel):
             fprime = sp.lambdify(self._symbol, func_derivative, "numpy")
             fprime2 = sp.lambdify(self._symbol, func_derivative2, "numpy")
         else:
-            def epsilon_minus_one(x): return self.epsilon_n(
-                x, **parameter_combination) - 1
+            def epsilon_minus_one(x):
+                return self.epsilon_n(
+                    x, **parameter_combination) - 1
 
-            def fprime(x): return derivative(
-                func=epsilon_minus_one, x0=x, dx=self.settings.dx)
-            def fprime2(x): return derivative(
-                func=epsilon_minus_one, x0=x, dx=self.settings.dx, n=2)
+            def fprime(x):
+                return derivative(
+                    func=epsilon_minus_one, x0=x, dx=self.settings.derivative_dx)
+
+            def fprime2(x):
+                return derivative(
+                    func=epsilon_minus_one, x0=x, dx=self.settings.derivative_dx, n=2)
 
         # Lets find approximate zeros
         end_value_list = numeric_solver.find_function_roots_numerical(
@@ -926,7 +1128,7 @@ class InflationModel(CalculationModel):
                 figure.show()
             else:
                 plt.show()
-            selected_root_value = plotter.ask_scalar_field_end_value(end_value_list)
+            selected_root_value = plotter.ask_scalar_field_end_value(end_value_list, ask_user_defined_point=True)
             if _ipython_info():
                 plt.close()
 
@@ -935,10 +1137,11 @@ class InflationModel(CalculationModel):
 
         return end_value
 
-    def _find_N_function(self, parameter_combination, method="numeric", return_value=False, info=True, subprocess_info=False):
+    def _find_N_function(self, parameter_combination, method="numeric", return_value=False, info=True,
+                         subprocess_info=False):
         """
-        Define process to calculate N(φ) and fint it's inverse function. N is a value which describes inflation scale in the end of inflation.
-        It takes an argument of scalar field start value.
+        Define process to calculate N(φ) and fint it's inverse function. N is a value which describes inflation scale
+        in the end of inflation. It takes an argument of scalar field start value.
 
         Parameters
         ----------
@@ -964,10 +1167,17 @@ class InflationModel(CalculationModel):
         # Key for saving result
         key = _create_parameter_key(parameter_combination)
 
+        # Check scalr field domain compatibility
+        if self.mode in [1, 3]:
+            self.domain_is_continuous(parameter_combination,
+                                      self.A.f_s(), self.B.f_s(), self.V.f_s(), self.N_integrand_s())
+        else:
+            self.domain_is_continuous(parameter_combination, self.IV.f_s(), self.N_integrand_s())
+
         with np.errstate(divide="ignore", invalid="ignore"):
             if key in self.end_values:
                 if info:
-                    print("***** Integrating N-function *****")
+                    print("***** Integreerin N-funktsiooni *****")
                     print("***** {} *****".format(key))
                     start_time = time.perf_counter()
                 if method == "symbolic" and self._all_functions_symbolic():
@@ -978,7 +1188,7 @@ class InflationModel(CalculationModel):
                         value = sp.lambdify(N_symbol, value, "numpy")
                     except (TimeoutError, errors.NoSolutionError) as e:
                         print(e)
-                        print("Couldn't solve symbolically. Calculating numerically.")
+                        print("Ei saanud sümboolselt lahendada. Lahendan numbriliselt.")
                         value = self._integrate_N_function_numeric(
                             parameter_combination, key, info=True, subprocess_info=False)
                 elif method == "numeric":
@@ -986,13 +1196,13 @@ class InflationModel(CalculationModel):
                         parameter_combination, key, info=True, subprocess_info=False)
                 else:
                     raise errors.WrongValueError(
-                        "Method must be 'symbolic' or 'numeric'.")
+                        "Method peab olema 'symbolic' või 'numeric'.")
 
                 if info:
                     end_time = time.perf_counter()
-                    print("Time taken: {:.2f} s.".format(
+                    print("Aeg: {:.2f} s.".format(
                         end_time - start_time))
-                    print("***** Found φ(N) function *****")
+                    print("***** Leidsin φ(N) funktsiooni. *****")
 
                 self.N_functions[key] = value
 
@@ -1040,23 +1250,22 @@ class InflationModel(CalculationModel):
             print("dN(φ) = {}".format(N_function))
 
         if info:
-            print("**** Integrating function and calculating it's inverse function *****")
+            print("**** Integreerin funktsiooni ja leian selle pöördfunktsiooni. *****")
             start_time = time.perf_counter()
         N_function_list = symbolic_solver.run_N_fold_integration_symbolic(N_function,
                                                                           self.end_values[key],
-                                                                          self._symbol,
                                                                           time=self.settings.timeout)
 
         if info:
             end_time = time.perf_counter()
-            print("Time taken: {:.2f} s.".format(end_time - start_time))
-            print("***** Function integrated and inverse function found *****")
+            print("Aeg: {:.2f} s.".format(end_time - start_time))
+            print("***** Funktsioon integreeritud ja pöördfunktsioon leitud. *****")
 
         N_function_list = [sp.sympify(
             x, {"N": sp.Symbol("N", real=True, positive=True)}) for x in N_function_list]
 
         if len(N_function_list) == 0:
-            raise errors.NoSolutionError("Couldn't calculate in time.")
+            raise errors.NoSolutionError("Ei suutnud leida lahendit {}s. jooksul.".format(self.settings.timeout))
         elif len(N_function_list) == 1:
             N_function = N_function_list[0]
         else:
@@ -1103,8 +1312,8 @@ class InflationModel(CalculationModel):
 
             function = sp.lambdify(self._symbol, 1 / symbolic_function, "numpy")
         else:
-            def function(x): return 1 / \
-                self.N_integrand_n(x, **parameter_combination)
+            def function(x):
+                return 1 / self.N_integrand_n(x, **parameter_combination)
 
         N_function = numeric_solver.integrate_N_fold_numerical(
             function, self.end_values[key], self.settings.N_list)
@@ -1124,16 +1333,20 @@ class InflationModel(CalculationModel):
         subprocess_info : bool, optional
             Does it print function expressions, by default False
         """
-        print("***** Starting program *****")
+        print("***** Alustan arvutamist *****")
         start_time = time.perf_counter()
+        length = 1
         for combination in self.parameter_combinations:
+            print("\n***** Kombinatsioon {} *****\n".format(length))
+            length += 1
+            self.domain_is_valid(combination)
             self._find_field_end_value(
                 parameter_combination=combination, method=method, info=info, subprocess_info=subprocess_info)
             self._find_N_function(parameter_combination=combination,
-                                    method=method, info=info, subprocess_info=subprocess_info)
+                                  method=method, info=info, subprocess_info=subprocess_info)
         end_time = time.perf_counter()
-        print("***** End calculating *****")
-        print("Process executed in : {:.2f} s.".format(end_time - start_time))
+        print("***** Arvutamine lõpetatud *****")
+        print("Programmi töötamise aeg : {:.2f} s.".format(end_time - start_time))
 
     def plot_graph(self, plot_type=1, plot_id=None, info=True):
         """
@@ -1152,13 +1365,17 @@ class InflationModel(CalculationModel):
             V_func = self.IV.f_n
         else:
             V_func = self.V.f_n
-        
+
         functions = {"V": V_func, "e": self.epsilon_n, "N": self.N_functions,
                      "r": self.r_n, "ns": self.ns_n
-                    }
+                     }
         plotter.plot(plot_type=plot_type, functions_dict=functions, parameter_combinations=self.parameter_combinations,
-                     N_points=self.settings.N_values, N_domain=self.settings.N_list, scalar_field_domain = self.settings.scalar_field_domain_plot,
-                     scalar_field_end_values = self.end_values, plot_id=plot_id, model_name=self.name, info=info)
+                     N_points=self.settings.N_values, N_domain=self.settings.N_list,
+                     scalar_field_domain=self.settings.scalar_field_domain_plot,
+                     scalar_field_end_values=self.end_values, plot_id=plot_id, model_name=self.name, info=info)
 
     def plot_show(self):
         plt.show()
+
+    def save_fig(self, name):
+        plt.savefig("{}.png".format(name))

@@ -7,6 +7,7 @@ from queue import Empty
 
 from . import errors as errors
 
+
 def subprocess(func, *args, time=10):
     """
     Function which calls out defined functions and terminates them after time.
@@ -32,13 +33,13 @@ def subprocess(func, *args, time=10):
         Couldn't calculate solution for function
     """
     queue = multiprocessing.Queue()
-    process = multiprocessing.Process(target=func, args=(*args, queue, ))
+    process = multiprocessing.Process(target=func, args=(*args, queue,))
     process.start()
     process.join(time + 1)
 
     if process.is_alive():
         process.terminate()
-        raise TimeoutError("Process was terminated because it took too much time.")
+        raise errors.TimeoutError("Process was terminated because it took too much time.")
     elif queue.empty():
         raise errors.NoSolutionError("Error. Could not find any solution.")
     else:
@@ -46,6 +47,7 @@ def subprocess(func, *args, time=10):
             return queue.get()
         except Empty:
             raise errors.NoSolutionError("Error. Could not find any solution.")
+
 
 def calculate_scalar_field_end_value(epsilon, queue=None):
     """
@@ -75,6 +77,7 @@ def calculate_scalar_field_end_value(epsilon, queue=None):
     except:
         raise errors.NoSolutionError("Error when solving. Was looking for scalar field end value.")
 
+
 def run_end_value_calculation_symbolical(epsilon, time):
     """
     Run end value calculation through subprocess.
@@ -95,6 +98,7 @@ def run_end_value_calculation_symbolical(epsilon, time):
     results = subprocess(calculate_scalar_field_end_value, epsilon, time=time)
     # select only real values
     return [np.float(x) for x in results if x.is_real]
+
 
 def integrate_N_integrand(N_integrand, end_value, symbol, queue=None):
     """
@@ -134,6 +138,7 @@ def integrate_N_integrand(N_integrand, end_value, symbol, queue=None):
     else:
         return N_equation
 
+
 def run_N_fold_integration_symbolic(N_integrand, end_value, time=None):
     """
     [summary]
@@ -155,6 +160,7 @@ def run_N_fold_integration_symbolic(N_integrand, end_value, time=None):
     N_integrand = str(N_integrand)
     return subprocess(integrate_N_integrand, N_integrand, end_value, time=time)
 
+
 #
 #
 #
@@ -162,3 +168,30 @@ def run_N_fold_integration_symbolic(N_integrand, end_value, time=None):
 #
 #
 #
+
+
+def run_IF_calculation_symbolical(IV, time):
+    IV = str(IV)
+    solutions = subprocess(calculate_IF_symbolical, IV, time=time)
+
+    solutions = [sp.sympify(x, {"x": sp.Symbol("x", real=True)}) for x in solutions]
+    return solutions
+
+
+def calculate_IF_symbolical(func, queue=None):
+    IF_symbol = sp.Symbol("x", real=True)
+    IV_symbol = sp.Symbol("y", real=True)
+    func = sp.sympify(func, {"x": IF_symbol})
+    equation = sp.Eq(IV_symbol, func)
+
+    try:
+        solutions = solve(equation, IF_symbol)
+        for solution_num in range(len(solutions)):
+            solutions[solution_num] = str(solutions[solution_num].subs(IV_symbol, IF_symbol))
+        if queue is not None:
+            queue.put_nowait(solutions)
+        else:
+            return solutions
+
+    except:
+        return

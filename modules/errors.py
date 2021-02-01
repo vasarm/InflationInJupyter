@@ -1,9 +1,9 @@
-
 class FunctionNotDefinedError(ValueError):
     """
     In case of if InflationFunction is not defined.
     """
     pass
+
 
 class NoSolutionError(RuntimeError):
     """
@@ -11,11 +11,13 @@ class NoSolutionError(RuntimeError):
     """
     pass
 
+
 class WrongTypeError(TypeError):
     """
     Isnerted value is wrong type
     """
     pass
+
 
 class ParameterDefinitionError(RuntimeError):
     """
@@ -23,11 +25,13 @@ class ParameterDefinitionError(RuntimeError):
     """
     pass
 
+
 class WrongValueError(RuntimeError):
     """
     [summary]
     """
     pass
+
 
 # Model mode is wrong (usually it is 0 and it means it cant compute)
 class ModeError(RuntimeError):
@@ -36,11 +40,13 @@ class ModeError(RuntimeError):
     """
     pass
 
+
 class AllFunctionsNotSymbolic(RuntimeError):
     """
     Program tries to calculate symbolically but all required functions aren't symbolically defined.
     """
     pass
+
 
 class FormalismError(RuntimeError):
     """
@@ -48,8 +54,23 @@ class FormalismError(RuntimeError):
     """
     pass
 
+
 class TimeoutError(TimeoutError):
     """
     If symbolic calculation takes too long time.
+    """
+    pass
+
+
+class MethodError(RuntimeError):
+    """
+    Method not definide yet
+    """
+    pass
+
+
+class ValueNotDefinedError(RuntimeError):
+    """
+    No value found.
     """
     pass

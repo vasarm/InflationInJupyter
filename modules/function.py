@@ -1,6 +1,9 @@
 import sympy as sp
 import numpy as np
 import scipy as sc
+from sympy import UnevaluatedExpr
+
+import pprint
 
 import types
 import inspect
@@ -9,6 +12,45 @@ from scipy.misc import derivative
 
 import modules.errors as errors
 import modules.config as config
+
+
+def symbolic_to_numeric(function):
+    """
+    This function is used to convert symbolic function to numeric function.
+    It is required to 'fix' symbol functions which are not simplified.
+    This helps to overcome cases where sympy won't simplify cases like (1-x)/(1-x) and it is doing this
+    by adding very small increment (something like 10^-100) to divisor. The only problem is that
+    real division by zero returns now huge number.
+    """
+    if not function.args:
+        return function
+
+    """
+    Check if it's power. In case of being power function then it is required to add small increment to the base.
+    Increment is decided so: If there is no other number then add 1e-100 otherwise we need the closest power of
+    ten of additives and add -14 + power of ten because otherwise this additives is "lost".
+    """
+    if isinstance(function, sp.Pow):
+        if isinstance(function.args[0], sp.Add) and any(number.is_number for number in function.args[0].args):
+            all_numbers = [x for x in function.args[0].args if x.is_number]
+            all_number_sum = sum(all_numbers)
+            if all_number_sum != 0:
+                power = np.floor(np.log10(float(np.abs(sum(all_numbers)))))
+            else:
+                power = 0
+            increment = 10 ** (-14 + power)
+        else:
+            # If no numbers, then put 10^-100
+            increment = 10 ** (-100)
+        function = sp.Pow(symbolic_to_numeric(function.args[0]) + increment, function.args[1], evaluate=False)
+        return function
+    else:
+        replacements = []
+        for argument in function.args:
+            replace = symbolic_to_numeric(argument)
+            replacements.append(replace)
+
+        return type(function)(*replacements)
 
 
 class InflationFunctionBase:
@@ -22,6 +64,7 @@ class InflationFunctionBase:
         self._symbol = sp.Symbol("x", real=True)
         self.symbolic_function = function
         self.numeric_function = function
+        self.name = "function"
 
     @property
     def symbolic_function(self):
@@ -34,8 +77,7 @@ class InflationFunctionBase:
         """
 
         if isinstance(function, sp.Expr):
-            variables = [(x, sp.Symbol(x, real=True))
-                         for x in function.free_symbols]
+            variables = [(x, sp.Symbol(str(x), real=True)) for x in function.free_symbols]
             function = function.subs(variables)
         elif isinstance(function, str):
             try:
@@ -59,11 +101,13 @@ class InflationFunctionBase:
         Converst function to python function.
         """
         if isinstance(function, sp.Expr) or isinstance(function, str):
-            variables = self.symbolic_function.free_symbols - set([self._symbol])
+            variables = self.symbolic_function.free_symbols - {self._symbol}
             variables = sorted(list(variables), key=str)
             variables.insert(0, self._symbol)
-            function = sp.lambdify(variables, self.symbolic_function, "numpy")
-        elif isinstance(function, types.FunctionType) or isinstance(function, sc.interpolate.interpolate.interp1d):
+            # Create 'fixed' sympy function
+            temp_function = symbolic_to_numeric(self.symbolic_function)
+            function = sp.lambdify(variables, temp_function, "numpy")
+        elif isinstance(function, types.FunctionType) or isinstance(function, sc.interpolate.interp1d):
             function = function
         else:
             raise errors.WrongTypeError(
@@ -109,11 +153,15 @@ class InflationFunctionBase:
             symbolic_derivative = self.symbolic_derivative()
             variables = self._parameter_symbols()
             variables = [sp.Symbol(x, real=True) for x in variables]
-            function = sp.lambdify(variables, symbolic_derivative, "numpy")
+            variables.insert(0, self._symbol)
+            # Create 'fixed' sympy function
+            temp_function = symbolic_to_numeric(symbolic_derivative)
+            function = sp.lambdify(variables, temp_function, "numpy")
             return function(x, **kwargs)
         else:
             try:
-                def function(y): return self.numeric_function(x=y, **kwargs)
+                def function(y):
+                    return self.numeric_function(x=y, **kwargs)
             except ZeroDivisionError:
                 ZeroDivisionError("Division by zero occured.")
             except:
@@ -146,11 +194,15 @@ class InflationFunctionBase:
             symbolic_derivative = self.symbolic_second_derivative()
             variables = self._parameter_symbols()
             variables = [sp.Symbol(x, real=True) for x in variables]
-            function = np.vectorize(sp.lambdify(variables, symbolic_derivative, "numpy"))
+            variables.insert(0, self._symbol)
+            # Create 'fixed' sympy function
+            temp_function = symbolic_to_numeric(symbolic_derivative)
+            function = np.vectorize(sp.lambdify(variables, temp_function, "numpy"))
             return function(x, **kwargs)
         else:
             try:
-                def function(y): return self.numeric_function(x=y, **kwargs)
+                def function(y):
+                    return self.numeric_function(x=y, **kwargs)
             except ZeroDivisionError:
                 ZeroDivisionError("Division by zero occured.")
             except:
@@ -187,7 +239,7 @@ class InflationFunction(InflationFunctionBase):
 
     @property
     def name(self):
-        return __name
+        return self.__name
 
     @name.setter
     def name(self, name):
@@ -229,7 +281,10 @@ class InflationFunction(InflationFunctionBase):
         Returns numeric function values
         """
         # Take only parameters which are used.
-        parameters_dict = {x: kwargs[x] for x in self._parameter_symbols() if x in kwargs}
+        if self.symbolic_function is not None:
+            parameters_dict = {x: kwargs[x] for x in self._parameter_symbols() if x in kwargs}
+        else:
+            parameters_dict = kwargs
         return self.numeric_function(x, **parameters_dict)
 
     def d_s(self):
